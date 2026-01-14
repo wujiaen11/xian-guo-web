@@ -12,7 +12,7 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'http://localhost:3000/api';
+        : 'https://express-gikd-217100-7-1320842230.sh.run.tcloudbase.com/api';
 
 // DOM元素
 let modalOverlay;
@@ -397,7 +397,7 @@ function renderProductList (filteredProducts = null) {
     productListBody.innerHTML = displayProducts.map(product => `
         <tr>
             <td>${product.id}</td>
-    <td>${product.img ? `<img src="${product.img.startsWith('http') ? product.img : 'http://localhost:3000' + product.img}" style="width: 80px; height: 80px; object-fit: cover;">` : '-'}</td>
+    <td>${product.img ? `<img src="${product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover;">` : '-'}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
             <td>${parseFloat(product.price).toFixed(2)}</td>

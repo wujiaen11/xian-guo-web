@@ -412,9 +412,15 @@
             document.head.appendChild(script);
         }</script>
     <!-- 延迟加载app.js，确保Chart.js先加载完成 -->
+    <script>
+        // 设置客户端环境变量
+        window.ENV = {
+            API_BASE_URL: 'https://express-gikd-217100-7-1320842230.sh.run.tcloudbase.com/api'
+        };
+    </script>
     <script
         defer
-        src="js/app.js?v=1.2"
+        src="js/app.js?v=1.3"
     ></script>
 </body>
 
