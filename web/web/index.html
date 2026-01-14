@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>商品管理系统</title>
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+<body>
+    <div id="app">
+        <header class="header">
+            <h1>商品管理系统</h1>
+            <div class="header-tabs">
+                <button
+                    class="tab-btn active"
+                    data-tab="products"
+                >商品管理</button>
+                <button
+                    class="tab-btn"
+                    data-tab="orders"
+                >订单管理</button>
+                <button
+                    class="tab-btn"
+                    data-tab="analytics"
+                >数据分析</button>
+            </div>
+        </header>
+
+        <div
+            class="header-actions"
+            id="products-actions"
+            style="display: block;"
+        >
+            <button
+                class="btn btn-primary"
+                id="add-product-btn"
+            >添加商品</button>
+            <button
+                class="btn btn-secondary"
+                id="export-data-btn"
+            >导出数据</button>
+            <input
+                type="file"
+                id="file-input"
+                accept=".json"
+                style="display: none;"
+            >
+            <button
+                class="btn btn-secondary"
+                id="import-data-btn"
+            >导入数据</button>
+        </div>
+
+        <div
+            class="header-actions"
+            id="orders-actions"
+            style="display: none;"
+        >
+            <!-- 订单管理相关操作按钮 -->
+        </div>
+
+        <main class="main">
+            <!-- 商品管理页面 -->
+            <div
+                id="products-page"
+                class="page-content"
+                style="display: block;"
+            >
+                <!-- 搜索和过滤 -->
+                <div class="search-filter">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="搜索商品名称"
+                        class="search-input"
+                    >
+                </div>
+
+                <!-- 商品列表 -->
+                <div class="product-list">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图片</th>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>价格</th>
+                                <th>库存</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list-body">
+                            <!-- 商品列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                    <div
+                        id="products-empty-state"
+                        class="empty-state"
+                        style="display: none;"
+                    >
+                        暂无商品数据
+                    </div>
+                </div>
+            </div>
+
+            <!-- 订单管理页面 -->
+            <div
+                id="orders-page"
+                class="page-content"
+                style="display: none;"
+            >
+                <!-- 搜索和过滤 -->
+                <div class="search-filter">
+                    <input
+                        type="text"
+                        id="order-search-input"
+                        placeholder="搜索订单ID"
+                        class="search-input"
+                    >
+                    <select
+                        id="order-status-filter"
+                        class="status-filter"
+                    >
+                        <option value="">全部状态</option>
+                        <option value="0">待支付</option>
+                        <option value="1">待发货</option>
+                        <option value="2">待收货</option>
+                        <option value="3">已完成</option>
+                        <option value="4">已取消</option>
+                    </select>
+                </div>
+
+                <!-- 订单列表 -->
+                <div class="order-list">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>用户ID</th>
+                                <th>总金额</th>
+                                <th>状态</th>
+                                <th>收货地址</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-list-body">
+                            <!-- 订单列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                    <div
+                        id="orders-empty-state"
+                        class="empty-state"
+                        style="display: none;"
+                    >
+                        暂无订单数据
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据分析页面 -->
+            <div
+                id="analytics-page"
+                class="page-content"
+                style="display: none;"
+            >
+                <!-- 数据分析页面内容 -->
+                <h2>数据分析</h2>
+
+                <!-- 数据概览卡片 -->
+                <div class="analytics-overview">
+                    <div class="stat-card">
+                        <h3>总商品数</h3>
+                        <div
+                            class="stat-value"
+                            id="total-products"
+                        >0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>总订单数</h3>
+                        <div
+                            class="stat-value"
+                            id="total-orders"
+                        >0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>总销售额</h3>
+                        <div
+                            class="stat-value"
+                            id="total-sales"
+                        >¥0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>平均订单金额</h3>
+                        <div
+                            class="stat-value"
+                            id="avg-order-amount"
+                        >¥0.00</div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="charts-section">
+                    <!-- 订单流量分析图表 -->
+                    <div class="chart-container">
+                        <h3>订单流量分析</h3>
+                        <canvas
+                            id="order-flow-chart"
+                            width="400"
+                            height="200"
+                        ></canvas>
+                    </div>
+
+                    <!-- 商品销售分析图表 -->
+                    <div class="chart-container">
+                        <h3>商品销售分析</h3>
+                        <canvas
+                            id="product-sales-chart"
+                            width="400"
+                            height="200"
+                        ></canvas>
+                    </div>
+                </div>
+
+                <!-- 销售数据表格 -->
+                <div class="analytics-table-section">
+                    <h3>销售数据明细</h3>
+                    <div class="analytics-table-container">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>商品名称</th>
+                                    <th>销售数量</th>
+                                    <th>销售金额</th>
+                                    <th>占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-data-body">
+                                <!-- 销售数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="pagination"
+                        id="sales-pagination"
+                    >
+                        <button
+                            class="pagination-btn"
+                            id="prev-page-btn"
+                            disabled
+                        >上一页</button>
+                        <span
+                            class="pagination-info"
+                            id="pagination-info"
+                        >第 1 页 / 共 1 页</span>
+                        <button
+                            class="pagination-btn"
+                            id="next-page-btn"
+                            disabled
+                        >下一页</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 添加/编辑商品表单 -->
+        <div
+            id="modal-overlay"
+            class="modal-overlay"
+            style="display: none;"
+        >
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="modal-title">添加商品</h2>
+                    <button
+                        class="close-btn"
+                        id="close-modal-btn"
+                    >&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="product-form">
+                        <input
+                            type="hidden"
+                            id="product-id"
+                        >
+                        <div class="form-group">
+                            <label for="product-name">商品名称</label>
+                            <input
+                                type="text"
+                                id="product-name"
+                                required
+                                class="form-input"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="product-description">商品描述</label>
+                            <textarea
+                                id="product-description"
+                                rows="3"
+                                class="form-input"
+                            ></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">商品价格</label>
+                            <input
+                                type="number"
+                                id="product-price"
+                                step="0.01"
+                                min="0"
+                                required
+                                class="form-input"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="product-original-price">划线价格（原价）</label>
+                            <input
+                                type="number"
+                                id="product-original-price"
+                                step="0.01"
+                                min="0"
+                                class="form-input"
+                                placeholder="用于显示折扣信息，留空则不显示"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="product-category">商品分类</label>
+                            <select
+                                id="product-category"
+                                class="form-input"
+                            >
+                                <option value="">加载中...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-stock">库存数量</label>
+                            <input
+                                type="number"
+                                id="product-stock"
+                                min="0"
+                                required
+                                class="form-input"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="product-img">商品图片</label>
+                            <input
+                                type="text"
+                                id="product-img"
+                                placeholder="图片预览（自动生成）"
+                                class="form-input"
+                                readonly
+                            >
+                            <input
+                                type="file"
+                                id="product-img-file"
+                                accept="image/*"
+                                style="margin-top: 10px;"
+                            >
+                            <small style="color: #666;">支持JPG、PNG等格式图片上传</small>
+                        </div>
+                        <div class="form-actions">
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                id="cancel-btn"
+                            >取消</button>
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                                id="submit-btn"
+                            >添加</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div
+            id="error-message"
+            class="error-message"
+            style="display: none;"
+        >
+            <span id="error-text"></span>
+            <button
+                class="close-btn"
+                id="close-error-btn"
+            >&times;</button>
+        </div>
+    </div>
+
+    <!-- Chart.js 图表库 - 添加多个备用加载方式 -->
+    <!-- 主要CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <!-- 备用CDN -->
+    <script>if (typeof Chart === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+            script.onload = function () {
+                console.log('Chart.js loaded from fallback CDN');
+            };
+            document.head.appendChild(script);
+        }</script>
+    <!-- 延迟加载app.js，确保Chart.js先加载完成 -->
+    <script>
+        // 设置客户端环境变量
+        window.ENV = {
+            API_BASE_URL: 'https://express-gikd-217100-7-1320842230.sh.run.tcloudbase.com/api'
+        };
+    </script>
+    <script
+        defer
+        src="js/app.js?v=1.3"
+    ></script>
+</body>
+
+</html>
