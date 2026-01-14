@@ -1,0 +1,12 @@
+{
+  "name": "xian-guo-web",
+  "version": "1.0.0",
+  "description": "商品管理系统",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080"
+  },
+  "keywords": ["xian-guo", "web", "admin"],
+  "author": "",
+  "license": "MIT"
+}
