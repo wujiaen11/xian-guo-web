@@ -16,7 +16,7 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
+        : 'https://xianguo.site/api';
 
 // DOM元素
 let modalOverlay;
