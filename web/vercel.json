@@ -13,12 +13,5 @@
       "src": "*.js",
       "use": "@vercel/static"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
-    }
   ]
 }
