@@ -196,6 +196,28 @@ body {
     font-style: italic;
 }
 
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: #3498db;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading-state::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ecf0f1;
+    border-radius: 50%;
+    border-top-color: #3498db;
+    animation: spin 1s ease-in-out infinite;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -512,6 +534,7 @@ body {
         max-height: 300px;
     }
 }
+
 .stat-value {
     font-size: 32px;
     font-weight: 700;
@@ -794,6 +817,7 @@ body {
 
 /* 响应式表格 */
 @media (max-width: 768px) {
+
     .product-table,
     .order-table,
     .analytics-table {

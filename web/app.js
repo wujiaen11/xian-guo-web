@@ -7,12 +7,16 @@ let categories = [];
 let currentProductId = null;
 let isEditing = false;
 let isLoadingAnalyticsData = false;
+// 加载状态元素
+let productsLoading;
+let ordersLoading;
+let analyticsLoading;
 // 使用环境变量或默认值，支持Vercel部署
 const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.env.API_BASE_URL)
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo.site/api';
+        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
 
 // DOM元素
 let modalOverlay;
@@ -74,17 +78,33 @@ let prevPageBtn;
 let nextPageBtn;
 
 // 初始化应用
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM Content Loaded');
     getDOMElements();
     bindEvents();
-    // 先渲染页面，再加载数据
-    setTimeout(() => {
-        loadProducts();
-        loadCategories();
-        loadOrders();
-    }, 100);
+    // 直接加载数据，不使用setTimeout
+    await loadInitialData();
 });
+
+// 加载初始数据
+async function loadInitialData () {
+    console.log('Loading initial data...');
+
+    // 并行加载所有初始数据
+    const results = await Promise.allSettled([
+        loadProducts(),
+        loadCategories(),
+        loadOrders()
+    ]);
+
+    // 检查是否所有请求都失败
+    const allFailed = results.every(result => result.status === 'rejected');
+
+    if (allFailed) {
+        console.error('All API requests failed');
+        showError('所有API请求都失败了，请检查网络连接或API地址配置');
+    }
+}
 
 // 获取DOM元素
 function getDOMElements () {
@@ -109,6 +129,7 @@ function getDOMElements () {
     searchInput = document.getElementById('search-input');
     productListBody = document.getElementById('product-list-body');
     productsEmptyState = document.getElementById('products-empty-state');
+    productsLoading = document.getElementById('products-loading');
     exportDataBtn = document.getElementById('export-data-btn');
     importDataBtn = document.getElementById('import-data-btn');
     fileInput = document.getElementById('file-input');
@@ -128,6 +149,8 @@ function getDOMElements () {
     orderStatusFilter = document.getElementById('order-status-filter');
     orderListBody = document.getElementById('order-list-body');
     ordersEmptyState = document.getElementById('orders-empty-state');
+    ordersLoading = document.getElementById('orders-loading');
+    analyticsLoading = document.getElementById('analytics-loading');
 
     // 数据分析相关元素
     totalProducts = document.getElementById('total-products');
@@ -290,6 +313,10 @@ function handleTabChange (e) {
 // 加载商品数据
 async function loadProducts () {
     console.log('Loading products from API...');
+    // 显示加载状态
+    if (productsLoading) {
+        productsLoading.style.display = 'flex';
+    }
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
@@ -304,6 +331,7 @@ async function loadProducts () {
             throw new Error('Failed to load products');
         }
         products = await response.json();
+        console.log('Products loaded successfully:', products);
         // 按照创建时间倒序排序，新添加的商品显示在最顶部
         products.sort((a, b) => {
             const dateA = new Date(a.created_at || a.createdAt).getTime();
@@ -311,17 +339,27 @@ async function loadProducts () {
             return dateB - dateA;
         });
         renderProductList();
+        return true;
     } catch (error) {
         console.error('Error loading products:', error);
-        showError('加载商品失败: ' + error.message);
-        // 使用模拟数据作为fallback
+        // 不直接显示错误，使用模拟数据作为fallback
         loadMockProducts();
+        return false;
+    } finally {
+        // 隐藏加载状态
+        if (productsLoading) {
+            productsLoading.style.display = 'none';
+        }
     }
 }
 
 // 加载订单数据
 async function loadOrders () {
     console.log('Loading orders from API...');
+    // 显示加载状态
+    if (ordersLoading) {
+        ordersLoading.style.display = 'flex';
+    }
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
@@ -336,7 +374,7 @@ async function loadOrders () {
             throw new Error('Failed to load orders');
         }
         orders = await response.json();
-        console.log('API returned orders:', orders);
+        console.log('Orders loaded successfully:', orders);
         // 如果API返回空数组，也加载模拟数据
         if (orders.length === 0) {
             console.log('API returned empty orders array, loading mock orders...');
@@ -344,11 +382,17 @@ async function loadOrders () {
         } else {
             renderOrderList();
         }
+        return true;
     } catch (error) {
         console.error('Error loading orders:', error);
-        showError('加载订单失败: ' + error.message);
-        // 使用模拟数据作为fallback
+        // 不直接显示错误，使用模拟数据作为fallback
         loadMockOrders();
+        return false;
+    } finally {
+        // 隐藏加载状态
+        if (ordersLoading) {
+            ordersLoading.style.display = 'none';
+        }
     }
 }
 
@@ -449,7 +493,9 @@ async function loadCategories () {
             throw new Error('Failed to load categories');
         }
         categories = await response.json();
+        console.log('Categories loaded successfully:', categories);
         renderCategoryOptions();
+        return true;
     } catch (error) {
         console.error('Error loading categories:', error);
         const defaultCategories = [
@@ -461,6 +507,7 @@ async function loadCategories () {
         ];
         categories = defaultCategories;
         renderCategoryOptions();
+        return false;
     }
 }
 
@@ -511,6 +558,17 @@ function loadMockProducts () {
 
 // 渲染商品列表
 function renderProductList (filteredProducts = null) {
+    // 确保DOM元素存在
+    if (!productListBody || !productsEmptyState) {
+        console.warn('Product list DOM elements not found, re-getting...');
+        getDOMElements();
+        // 如果仍然不存在，返回
+        if (!productListBody || !productsEmptyState) {
+            console.error('Product list DOM elements still not found');
+            return;
+        }
+    }
+
     const displayProducts = filteredProducts || products;
 
     if (displayProducts.length === 0) {
@@ -549,6 +607,11 @@ function renderOrderList (filteredOrders = null) {
     if (!orderListBody || !ordersEmptyState) {
         console.error('Order list DOM elements not found, re-getting...');
         getDOMElements();
+        // 如果仍然不存在，返回
+        if (!orderListBody || !ordersEmptyState) {
+            console.error('Order list DOM elements still not found');
+            return;
+        }
     }
 
     const displayOrders = filteredOrders || orders;
@@ -611,18 +674,28 @@ async function updateOrderStatus (orderId, currentStatus) {
     const newStatus = currentStatus + 1;
     if (confirm(`确定要将订单状态更新为 ${getStatusText(newStatus)} 吗？`)) {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+            const url = `${API_BASE_URL}/orders/${orderId}/status`;
+            const data = { status: newStatus };
+            console.log('Updating order status:', { orderId, currentStatus, newStatus, url });
+
+            const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify(data)
             });
+
+            console.log('Update order status response:', { status: response.status, ok: response.ok });
 
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('Update order status error:', errorData);
                 throw new Error(errorData.error || '更新订单状态失败');
             }
+
+            const result = await response.json();
+            console.log('Update order status success:', result);
 
             // 重新加载订单数据
             await loadOrders();
@@ -686,7 +759,7 @@ function resetForm () {
 // 处理表单提交
 async function handleFormSubmit (e) {
     e.preventDefault();
-    console.log('Form submitted');
+    console.log('Form submitted', { isEditing, currentProductId });
 
     if (!validateForm()) {
         return;
@@ -708,22 +781,26 @@ async function handleFormSubmit (e) {
 
     try {
         let response;
-        if (isEditing) {
-            response = await fetch(`${API_BASE_URL}/products/${currentProductId}`, {
-                method: 'PUT',
-                body: formData
-            });
-        } else {
-            response = await fetch(`${API_BASE_URL}/products`, {
-                method: 'POST',
-                body: formData
-            });
-        }
+        const url = isEditing ? `${API_BASE_URL}/products/${currentProductId}` : `${API_BASE_URL}/products`;
+        const method = isEditing ? 'PUT' : 'POST';
+
+        console.log('Sending form data:', { url, method });
+
+        response = await fetch(url, {
+            method: method,
+            body: formData
+        });
+
+        console.log('Form submission response:', { status: response.status, ok: response.ok });
 
         if (!response.ok) {
             const errorData = await response.json();
+            console.error('Form submission error:', errorData);
             throw new Error(errorData.error || '操作失败');
         }
+
+        const result = await response.json();
+        console.log('Form submission success:', result);
 
         // 重新加载商品数据
         await loadProducts();
@@ -763,14 +840,23 @@ function validateForm () {
 async function deleteProduct (productId) {
     if (confirm('确定要删除这个商品吗？')) {
         try {
-            const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+            const url = `${API_BASE_URL}/products/${productId}`;
+            console.log('Deleting product:', { productId, url });
+
+            const response = await fetch(url, {
                 method: 'DELETE'
             });
 
+            console.log('Delete product response:', { status: response.status, ok: response.ok });
+
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('Delete product error:', errorData);
                 throw new Error(errorData.error || '删除失败');
             }
+
+            const result = await response.json();
+            console.log('Delete product success:', result);
 
             // 重新加载商品数据
             await loadProducts();
@@ -931,6 +1017,10 @@ async function loadAnalyticsData () {
 
     isLoadingAnalyticsData = true;
     console.log('Loading analytics data...');
+    // 显示加载状态
+    if (analyticsLoading) {
+        analyticsLoading.style.display = 'flex';
+    }
 
     try {
         // 为每个请求添加超时控制
@@ -955,6 +1045,7 @@ async function loadAnalyticsData () {
 
         const products = await productsResponse.json();
         const orders = await ordersResponse.json();
+        console.log('Analytics data loaded successfully:', { products: products.length, orders: orders.length });
 
         // 计算分析指标并渲染图表
         calculateAnalyticsMetrics(products, orders);
@@ -966,6 +1057,10 @@ async function loadAnalyticsData () {
     } finally {
         // 无论成功还是失败，都要重置标志位
         isLoadingAnalyticsData = false;
+        // 隐藏加载状态
+        if (analyticsLoading) {
+            analyticsLoading.style.display = 'none';
+        }
     }
 }
 
@@ -1196,10 +1291,15 @@ function renderProductSalesChart (productSalesData) {
 function renderSalesDataTable (productSalesData, totalSalesAmount) {
     console.log('Rendering sales data table with pagination...');
 
-    // 确保salesDataBody存在
+    // 确保DOM元素存在
     if (!salesDataBody) {
-        console.warn('salesDataBody not found, skipping table rendering');
-        return;
+        console.warn('salesDataBody not found, re-getting...');
+        refreshAnalyticsDOM();
+        // 如果仍然不存在，返回
+        if (!salesDataBody) {
+            console.error('salesDataBody still not found');
+            return;
+        }
     }
 
     // 存储完整数据用于分页
