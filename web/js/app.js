@@ -78,10 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
     getDOMElements();
     bindEvents();
-    loadProducts();
-    loadCategories();
-    // 初始化订单数据，确保页面加载时已有订单数据
-    loadOrders();
+    // 先渲染页面，再加载数据
+    setTimeout(() => {
+        loadProducts();
+        loadCategories();
+        loadOrders();
+    }, 100);
 });
 
 // 获取DOM元素
@@ -289,7 +291,15 @@ function handleTabChange (e) {
 async function loadProducts () {
     console.log('Loading products from API...');
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+        const response = await fetch(`${API_BASE_URL}/products`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error('Failed to load products');
         }
@@ -313,7 +323,15 @@ async function loadProducts () {
 async function loadOrders () {
     console.log('Loading orders from API...');
     try {
-        const response = await fetch(`${API_BASE_URL}/orders`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+        const response = await fetch(`${API_BASE_URL}/orders`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error('Failed to load orders');
         }
@@ -418,7 +436,15 @@ function loadMockOrders () {
 async function loadCategories () {
     console.log('Loading categories from API...');
     try {
-        const response = await fetch(`${API_BASE_URL}/categories`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+        const response = await fetch(`${API_BASE_URL}/categories`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error('Failed to load categories');
         }
@@ -907,11 +933,21 @@ async function loadAnalyticsData () {
     console.log('Loading analytics data...');
 
     try {
+        // 为每个请求添加超时控制
+        const controller1 = new AbortController();
+        const controller2 = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller1.abort();
+            controller2.abort();
+        }, 5000); // 5秒超时
+
         // 并行加载商品和订单数据
         const [productsResponse, ordersResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/products`),
-            fetch(`${API_BASE_URL}/orders`)
+            fetch(`${API_BASE_URL}/products`, { signal: controller1.signal }),
+            fetch(`${API_BASE_URL}/orders`, { signal: controller2.signal })
         ]);
+
+        clearTimeout(timeoutId);
 
         if (!productsResponse.ok || !ordersResponse.ok) {
             throw new Error('Failed to load analytics data');
