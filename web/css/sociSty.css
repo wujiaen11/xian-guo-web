@@ -1,0 +1,83 @@
+@charset "utf-8";
+/* CSS Document */
+
+body{
+	background: #b5caee;
+}
+#social{
+		background:#748fa8;
+}
+
+ul.social-icons li {
+	display: inline-block;
+}
+
+ul.social-icons li a {
+	display: inline-block;
+	width: 50px;
+	height: 50px;
+	animation-name: example;
+	background: url("../images/img-sprite.png") no-repeat 0px 0px;
+}
+ul.social-icons li a.facebook {
+	background-position: 0px 0px;
+}
+
+ul.social-icons li a.facebook:hover {
+	background-position: 0px -50px;
+}
+
+ul.social-icons li a.twitter {
+	background-position: -50px 0px;
+}
+
+ul.social-icons li a.twitter:hover {
+	background-position: -50px -50px;
+}
+
+ul.social-icons li a.googleplus {
+	background-position: -100px 0px;
+}
+
+ul.social-icons li a.googleplus:hover {
+	/*--w3layouts--*/
+	/*--agileits--*/
+	background-position: -100px -50px;
+}
+
+ul.social-icons li a.instagram {
+	background-position: -150px 0px;
+}
+
+ul.social-icons li a.instagram:hover {
+	background-position: -150px -50px;
+}
+
+ul.social-icons li a.youtube {
+	background-position: -200px 0px;
+}
+
+ul.social-icons li a.youtube:hover {
+	background-position: -200px -50px;
+}
+
+
+@keyframes example {
+ 20%  { transform: translateX(4px);  }
+  40%  { transform: translateX(-4px); }
+  60%  { transform: translateX(2px);  }
+  80%  { transform: translateX(-1px); }
+  100% { transform: translateX(0);    }
+}
+a:hover{
+	animation: example;
+	 animation:rotateScale 3s infinite;
+	-moz-animation:rotateScale 3s infinite; /* Firefox */
+	-webkit-animation:rotateScale 3s infinite; /* Safari and Chrome */
+	-o-animation:rotateScale 3s infinite;
+
+
+
+}
+
+		/*-- //Header-Social-Icons --*/

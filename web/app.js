@@ -7,6 +7,7 @@ let categories = [];
 let currentProductId = null;
 let isEditing = false;
 let isLoadingAnalyticsData = false;
+let isAuthenticated = false;
 // 加载状态元素
 let productsLoading;
 let ordersLoading;
@@ -17,6 +18,12 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
         : 'https://www.xianguo.site/api';
+
+// 模拟管理员账号
+const ADMIN_CREDENTIALS = {
+    username: 'admin',
+    password: 'admin123'
+};
 
 // DOM元素
 let modalOverlay;
@@ -45,6 +52,11 @@ let errorMessage;
 let errorText;
 let closeErrorBtn;
 let emptyAddBtn;
+// 登录相关DOM元素
+let loginForm;
+let usernameInput;
+let passwordInput;
+let adminPanel;
 // 订单相关DOM元素
 let tabBtns;
 let productsActions;
@@ -82,8 +94,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM Content Loaded');
     getDOMElements();
     bindEvents();
-    // 直接加载数据，不使用setTimeout
-    await loadInitialData();
+
+    // 检查是否已经登录
+    checkAuthentication();
+
+    // 如果已登录，根据用户类型决定显示内容
+    if (isAuthenticated) {
+        const userType = localStorage.getItem('userType');
+        if (userType === 'admin') {
+            // 管理员登录，显示管理面板
+            await loadInitialData();
+            showAdminPanel();
+        } else {
+            // 普通用户登录，显示首页
+            await loadHomePageProducts();
+        }
+    } else {
+        // 未登录，加载首页产品数据
+        await loadHomePageProducts();
+    }
 });
 
 // 加载初始数据
@@ -109,6 +138,29 @@ async function loadInitialData () {
 // 获取DOM元素
 function getDOMElements () {
     console.log('Getting DOM elements...');
+    // 登录相关元素
+    loginForm = document.getElementById('login-form');
+    usernameInput = document.getElementById('username');
+    passwordInput = document.getElementById('password');
+    adminPanel = document.getElementById('admin-panel');
+
+    // 注册相关元素
+    registerForm = document.getElementById('register-form');
+    registerUsernameInput = document.getElementById('register-username');
+    registerPasswordInput = document.getElementById('register-password');
+    registerConfirmPasswordInput = document.getElementById('register-confirm-password');
+
+    // 首页相关元素
+    adminLoginBtn = document.querySelector('.admin-login-btn');
+    adminLoginModal = document.getElementById('admin-login-modal');
+    closeLoginModal = document.getElementById('close-login-modal');
+    productList = document.getElementById('product-list');
+    heroArea = document.querySelector('.hero_area');
+    bg = document.querySelector('.bg');
+    contactSection = document.querySelector('.contact_section');
+    infoSection = document.querySelector('.info_section');
+    footerSection = document.querySelector('.footer_section');
+
     // 商品相关元素
     modalOverlay = document.getElementById('modal-overlay');
     modalTitle = document.getElementById('modal-title');
@@ -181,6 +233,41 @@ function getDOMElements () {
 // 绑定事件
 function bindEvents () {
     console.log('Binding events...');
+
+    // 登录表单事件
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+        console.log('Login form submit event bound');
+    }
+
+    // 注册表单事件
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+        console.log('Register form submit event bound');
+    }
+
+    // 首页管理员登录按钮事件
+    if (adminLoginBtn) {
+        adminLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openLoginModal();
+        });
+        console.log('Admin login button event bound');
+    }
+
+    // 登录模态框关闭事件
+    if (closeLoginModal) {
+        closeLoginModal.addEventListener('click', closeLoginModalFunc);
+    }
+
+    if (adminLoginModal) {
+        adminLoginModal.addEventListener('click', (e) => {
+            if (e.target === adminLoginModal) {
+                closeLoginModalFunc();
+            }
+        });
+    }
+
     // 模态框事件
     if (addProductBtn) {
         addProductBtn.addEventListener('click', openAddModal);
@@ -232,10 +319,7 @@ function bindEvents () {
         fileInput.addEventListener('change', importData);
     }
 
-    // 错误信息事件
-    if (closeErrorBtn) {
-        closeErrorBtn.addEventListener('click', hideError);
-    }
+
 
     // 图片上传事件
     if (productImgFileInput) {
@@ -1023,33 +1107,39 @@ async function loadAnalyticsData () {
     }
 
     try {
-        // 为每个请求添加超时控制
-        const controller1 = new AbortController();
-        const controller2 = new AbortController();
-        const timeoutId = setTimeout(() => {
-            controller1.abort();
-            controller2.abort();
-        }, 5000); // 5秒超时
+        // 检查是否在本地服务器环境
+        if (window.location.protocol === 'file:') {
+            console.warn('Running in file:// protocol, using mock data directly');
+            // 直接使用模拟数据
+            generateMockAnalyticsData();
+        } else {
+            // 为每个请求添加超时控制
+            const controller1 = new AbortController();
+            const controller2 = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller1.abort();
+                controller2.abort();
+            }, 5000); // 5秒超时
 
-        // 并行加载商品和订单数据
-        const [productsResponse, ordersResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/products`, { signal: controller1.signal }),
-            fetch(`${API_BASE_URL}/orders`, { signal: controller2.signal })
-        ]);
+            // 并行加载商品和订单数据
+            const [productsResponse, ordersResponse] = await Promise.all([
+                fetch(`${API_BASE_URL}/products`, { signal: controller1.signal }),
+                fetch(`${API_BASE_URL}/orders`, { signal: controller2.signal })
+            ]);
 
-        clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
 
-        if (!productsResponse.ok || !ordersResponse.ok) {
-            throw new Error('Failed to load analytics data');
+            if (!productsResponse.ok || !ordersResponse.ok) {
+                throw new Error('Failed to load analytics data');
+            }
+
+            const products = await productsResponse.json();
+            const orders = await ordersResponse.json();
+            console.log('Analytics data loaded successfully:', { products: products.length, orders: orders.length });
+
+            // 计算分析指标并渲染图表
+            calculateAnalyticsMetrics(products, orders);
         }
-
-        const products = await productsResponse.json();
-        const orders = await ordersResponse.json();
-        console.log('Analytics data loaded successfully:', { products: products.length, orders: orders.length });
-
-        // 计算分析指标并渲染图表
-        calculateAnalyticsMetrics(products, orders);
-
     } catch (error) {
         console.error('Error loading analytics data:', error);
         // 使用模拟数据作为 fallback
@@ -1331,17 +1421,24 @@ function renderSalesDataTable (productSalesData, totalSalesAmount) {
         return;
     }
 
-    salesDataBody.innerHTML = currentPageData.map(product => {
+    // 清空表格内容，避免无限添加
+    salesDataBody.innerHTML = '';
+
+    // 限制最多显示10行数据
+    const limitedData = currentPageData.slice(0, 10);
+
+    // 添加当前页数据
+    limitedData.forEach(product => {
         const percentage = totalSalesAmount > 0 ? ((product.salesAmount / totalSalesAmount) * 100).toFixed(1) : '0.0';
-        return `
-            <tr>
-                <td>${product.name}</td>
-                <td>${product.salesCount}</td>
-                <td>¥${product.salesAmount.toFixed(2)}</td>
-                <td>${percentage}%</td>
-            </tr>
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.salesCount}</td>
+            <td>¥${product.salesAmount.toFixed(2)}</td>
+            <td>${percentage}%</td>
         `;
-    }).join('');
+        salesDataBody.appendChild(row);
+    });
 }
 
 // 更新分页信息显示
@@ -1430,3 +1527,826 @@ function getLast7Days () {
 
     return days;
 }
+
+// 登录相关函数
+
+// 处理登录表单提交
+async function handleLogin (e) {
+    e.preventDefault();
+    console.log('Login form submitted');
+
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!username || !password) {
+        showError('请输入用户名和密码');
+        return;
+    }
+
+    // 验证用户凭据（包括管理员和普通用户）
+    // 这里简化处理，实际应该从后端验证
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        // 管理员登录成功
+        isAuthenticated = true;
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('username', username);
+        localStorage.setItem('userType', 'admin');
+
+        // 更新导航栏显示为用户名
+        updateNavbarUserInfo(username);
+
+        // 加载管理系统内容
+        await loadInitialData();
+        showAdminPanel();
+        showError('登录成功', 'success');
+        closeLoginModalFunc();
+    } else {
+        // 从localStorage获取已注册用户
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+
+        const userExists = registeredUsers.some(user => user.username === username && user.password === password);
+
+        if (userExists) {
+            // 普通用户登录成功
+            isAuthenticated = true;
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('username', username);
+            localStorage.setItem('userType', 'user');
+
+            // 更新导航栏显示为用户名
+            updateNavbarUserInfo(username);
+
+            showError('登录成功', 'success');
+            closeLoginModalFunc();
+        } else {
+            // 登录失败
+            showError('用户名或密码错误或未注册');
+        }
+    }
+}
+
+// 处理注册表单提交
+async function handleRegister (e) {
+    e.preventDefault();
+    console.log('Register form submitted');
+
+    const username = registerUsernameInput.value.trim();
+    const password = registerPasswordInput.value.trim();
+    const confirmPassword = registerConfirmPasswordInput.value.trim();
+
+    if (!username || !password || !confirmPassword) {
+        showError('请填写所有字段');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showError('两次输入的密码不一致');
+        return;
+    }
+
+    // 从localStorage获取已注册用户
+    let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+
+    // 检查用户名是否已存在
+    if (registeredUsers.some(user => user.username === username)) {
+        showError('用户名已存在');
+        return;
+    }
+
+    // 存储新用户到localStorage
+    registeredUsers.push({ username, password });
+    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+
+    showError('注册成功，请登录', 'success');
+
+    // 切换到登录标签页
+    document.getElementById('login-tab').click();
+
+    // 清空注册表单
+    registerForm.reset();
+}
+
+// 检查是否已经登录
+function checkAuthentication () {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    isAuthenticated = storedAuth === 'true';
+
+    // 如果已登录，更新导航栏显示为用户名
+    if (isAuthenticated) {
+        const username = localStorage.getItem('username');
+        if (username) {
+            updateNavbarUserInfo(username);
+        }
+    }
+}
+
+// 更新导航栏用户信息
+function updateNavbarUserInfo (username) {
+    const loginLink = document.querySelector('.admin-login-btn');
+    if (loginLink) {
+        // 保存原始用户名
+        loginLink.dataset.username = username;
+        loginLink.textContent = username;
+        loginLink.title = `欢迎，${username}`;
+        loginLink.style.color = '#fff';
+        loginLink.style.fontWeight = 'bold';
+
+        // 移除之前的事件监听器
+        loginLink.removeEventListener('mouseenter', handleMouseEnter);
+        loginLink.removeEventListener('mouseleave', handleMouseLeave);
+        loginLink.removeEventListener('click', handleLogoutClick);
+
+        // 添加鼠标悬停事件
+        loginLink.addEventListener('mouseenter', handleMouseEnter);
+        loginLink.addEventListener('mouseleave', handleMouseLeave);
+        loginLink.addEventListener('click', handleLogoutClick);
+    }
+}
+
+// 处理鼠标悬停事件
+function handleMouseEnter (e) {
+    const loginLink = e.target;
+    loginLink.textContent = '退出登录';
+    loginLink.title = '点击退出登录';
+}
+
+// 处理鼠标离开事件
+function handleMouseLeave (e) {
+    const loginLink = e.target;
+    const username = loginLink.dataset.username;
+    if (username) {
+        loginLink.textContent = username;
+        loginLink.title = `欢迎，${username}`;
+    }
+}
+
+// 处理退出登录点击事件
+function handleLogoutClick (e) {
+    e.preventDefault();
+    logout();
+}
+
+// 退出登录
+function logout () {
+    console.log('开始执行退出登录函数');
+
+    isAuthenticated = false;
+    console.log('设置 isAuthenticated 为 false');
+
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userType');
+    console.log('清除本地存储中的用户信息');
+
+    // 关闭登录模态框
+    closeLoginModalFunc();
+    console.log('关闭登录模态框');
+
+    // 恢复导航栏显示为"用户登录"
+    const loginLink = document.querySelector('.admin-login-btn');
+    if (loginLink) {
+        console.log('找到导航栏登录链接');
+        loginLink.textContent = '用户登录';
+        loginLink.title = '用户登录';
+        loginLink.style.color = '';
+        loginLink.style.fontWeight = '';
+
+        // 移除事件监听器
+        loginLink.removeEventListener('mouseenter', handleMouseEnter);
+        loginLink.removeEventListener('mouseleave', handleMouseLeave);
+        loginLink.removeEventListener('click', handleLogoutClick);
+
+        // 恢复原始点击事件（打开登录模态框）
+        loginLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            openLoginModal();
+        });
+        console.log('恢复导航栏为用户登录');
+    } else {
+        console.log('未找到导航栏登录链接');
+    }
+
+    // 显示退出登录成功消息
+    showError('已成功退出登录', 'success');
+    console.log('显示退出登录成功消息');
+}
+
+// 打开登录模态框
+function openLoginModal () {
+    if (adminLoginModal) {
+        // 检查用户是否已登录
+        checkAuthentication();
+
+        if (isAuthenticated) {
+            // 已登录状态，修改模态框内容为退出登录
+            const modalContent = adminLoginModal.querySelector('div > div');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div style="background-color: white; padding: 30px; border-radius: 12px 12px 0 0;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 style="color: #333; font-weight: 600; margin: 0;">用户中心</h2>
+                            <button
+                                type="button"
+                                id="close-login-modal"
+                                style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999; transition: color 0.3s ease;"
+                                onmouseover="this.style.color = '#333'"
+                                onmouseout="this.style.color = '#999'"
+                            >&times;</button>
+                        </div>
+                        <div style="text-align: center; padding: 20px 0;">
+                            <p style="font-size: 18px; color: #333; margin-bottom: 30px;">欢迎，${localStorage.getItem('username')}</p>
+                            <button
+                                type="button"
+                                id="logout-btn"
+                                style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;"
+                                onmouseover="this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';"
+                                onmouseout="this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
+                            >退出登录</button>
+                        </div>
+                    </div>
+                `;
+
+                // 等待DOM更新后再绑定事件
+                setTimeout(function () {
+                    // 添加退出登录按钮事件
+                    const logoutBtn = adminLoginModal.querySelector('#logout-btn');
+                    if (logoutBtn) {
+                        console.log('退出登录按钮找到，绑定点击事件');
+                        // 移除之前可能存在的事件监听器
+                        logoutBtn.removeEventListener('click', logout);
+                        // 添加新的事件监听器
+                        logoutBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            console.log('退出登录按钮被点击');
+                            logout();
+                        });
+                    } else {
+                        console.log('退出登录按钮未找到');
+                        // 打印当前模态框的HTML结构
+                        console.log('当前模态框内容:', adminLoginModal.innerHTML);
+                    }
+                }, 100);
+
+                // 添加关闭按钮事件
+                const closeBtn = adminLoginModal.querySelector('#close-login-modal');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', closeLoginModalFunc);
+                }
+            }
+        } else {
+            // 未登录状态，恢复原有的登录/注册表单
+            const modalContent = adminLoginModal.querySelector('div > div');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div style="background-color: white; padding: 30px; border-radius: 12px 12px 0 0;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 style="color: #333; font-weight: 600; margin: 0;">用户登录</h2>
+                            <button
+                                type="button"
+                                id="close-login-modal"
+                                style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999; transition: color 0.3s ease;"
+                                onmouseover="this.style.color = '#333'"
+                                onmouseout="this.style.color = '#999'"
+                            >&times;</button>
+                        </div>
+
+                        <!-- 标签页切换 -->
+                        <div class="mb-4">
+                            <ul
+                                class="nav nav-tabs"
+                                style="border-bottom: 1px solid #e0e0e0;"
+                            >
+                                <li class="nav-item">
+                                    <a
+                                        class="nav-link active"
+                                        id="login-tab"
+                                        data-toggle="tab"
+                                        href="#login-content"
+                                        style="color: #667eea; font-weight: 500; padding: 10px 20px; border-radius: 4px 4px 0 0; transition: all 0.3s ease;"
+                                    >登录</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a
+                                        class="nav-link"
+                                        id="register-tab"
+                                        data-toggle="tab"
+                                        href="#register-content"
+                                        style="color: #999; font-weight: 500; padding: 10px 20px; border-radius: 4px 4px 0 0; transition: all 0.3s ease;"
+                                    >注册</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- 标签页内容 -->
+                        <div class="tab-content">
+                            <!-- 登录表单 -->
+                            <div
+                                class="tab-pane fade show active"
+                                id="login-content"
+                            >
+                                <form id="login-form">
+                                    <div class="form-group mb-4">
+                                        <label
+                                            for="username"
+                                            style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;"
+                                        >用户名</label>
+                                        <input
+                                            type="text"
+                                            id="username"
+                                            class="form-control"
+                                            required
+                                            style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s ease;"
+                                            onfocus="this.style.borderColor = '#667eea'; this.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor = '#e0e0e0'; this.style.boxShadow = 'none';"
+                                        >
+                                    </div>
+                                    <div class="form-group mb-5">
+                                        <label
+                                            for="password"
+                                            style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;"
+                                        >密码</label>
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            class="form-control"
+                                            required
+                                            style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s ease;"
+                                            onfocus="this.style.borderColor = '#667eea'; this.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor = '#e0e0e0'; this.style.boxShadow = 'none';"
+                                        >
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary btn-block"
+                                        style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;"
+                                        onmouseover="this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';"
+                                        onmouseout="this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
+                                    >登录</button>
+                                </form>
+                            </div>
+
+                            <!-- 注册表单 -->
+                            <div
+                                class="tab-pane fade"
+                                id="register-content"
+                            >
+                                <form id="register-form">
+                                    <div class="form-group mb-4">
+                                        <label
+                                            for="register-username"
+                                            style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;"
+                                        >用户名</label>
+                                        <input
+                                            type="text"
+                                            id="register-username"
+                                            class="form-control"
+                                            required
+                                            style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s ease;"
+                                            onfocus="this.style.borderColor = '#667eea'; this.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor = '#e0e0e0'; this.style.boxShadow = 'none';"
+                                        >
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label
+                                            for="register-password"
+                                            style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;"
+                                        >密码</label>
+                                        <input
+                                            type="password"
+                                            id="register-password"
+                                            class="form-control"
+                                            required
+                                            style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s ease;"
+                                            onfocus="this.style.borderColor = '#667eea'; this.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor = '#e0e0e0'; this.style.boxShadow = 'none';"
+                                        >
+                                    </div>
+                                    <div class="form-group mb-5">
+                                        <label
+                                            for="register-confirm-password"
+                                            style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;"
+                                        >确认密码</label>
+                                        <input
+                                            type="password"
+                                            id="register-confirm-password"
+                                            class="form-control"
+                                            required
+                                            style="width: 100%; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s ease;"
+                                            onfocus="this.style.borderColor = '#667eea'; this.style.boxShadow = '0 0 0 2px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor = '#e0e0e0'; this.style.boxShadow = 'none';"
+                                        >
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary btn-block"
+                                        style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;"
+                                        onmouseover="this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';"
+                                        onmouseout="this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';"
+                                    >注册</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 添加关闭按钮事件
+                const closeBtn = adminLoginModal.querySelector('#close-login-modal');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', closeLoginModalFunc);
+                }
+
+                // 重新获取输入元素引用
+                usernameInput = adminLoginModal.querySelector('#username');
+                passwordInput = adminLoginModal.querySelector('#password');
+                registerUsernameInput = adminLoginModal.querySelector('#register-username');
+                registerPasswordInput = adminLoginModal.querySelector('#register-password');
+                registerConfirmPasswordInput = adminLoginModal.querySelector('#register-confirm-password');
+
+                // 重新绑定表单事件
+                const loginForm = adminLoginModal.querySelector('#login-form');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', handleLogin);
+                }
+
+                const registerForm = adminLoginModal.querySelector('#register-form');
+                if (registerForm) {
+                    registerForm.addEventListener('submit', handleRegister);
+                }
+
+                console.log('重新获取输入元素引用:', {
+                    usernameInput: !!usernameInput,
+                    passwordInput: !!passwordInput,
+                    registerUsernameInput: !!registerUsernameInput,
+                    registerPasswordInput: !!registerPasswordInput,
+                    registerConfirmPasswordInput: !!registerConfirmPasswordInput
+                });
+            }
+        }
+
+        adminLoginModal.style.display = 'flex';
+    }
+}
+
+// 关闭登录模态框
+function closeLoginModalFunc () {
+    if (adminLoginModal) {
+        adminLoginModal.style.display = 'none';
+    }
+}
+
+// 加载首页产品数据
+async function loadHomePageProducts () {
+    console.log('Loading home page products...');
+    if (!productList) return;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+        const response = await fetch(`${API_BASE_URL}/products`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error('Failed to load products');
+        }
+        products = await response.json();
+        console.log('Home page products loaded successfully:', products);
+        // 按照创建时间倒序排序，新添加的商品显示在最顶部
+        products.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.createdAt).getTime();
+            const dateB = new Date(b.created_at || b.createdAt).getTime();
+            return dateB - dateA;
+        });
+        renderHomePageProducts();
+    } catch (error) {
+        console.error('Error loading home page products:', error);
+        // 不直接显示错误，使用模拟数据作为fallback
+        // 直接设置模拟数据，不调用loadMockProducts()，避免调用renderProductList()
+        products = [
+            {
+                id: '1',
+                name: '500g±50g/份【酸甜多汁】高山无籽蜜桔',
+                description: '富含维C',
+                price: 3.9,
+                stock: 100,
+                img: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg.alicdn.com%2Fi2%2F2627785630%2FO1CN01lcFjrQ1rSaXqyoj56_%21%212627785630.jpg&refer=http%3A%2F%2Fimg.alicdn.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1701185157&t=01ad96d19c2d890a50e34ea6795390c6',
+                createdAt: Date.now() - 86400000,
+                updatedAt: Date.now() - 86400000
+            },
+            {
+                id: '2',
+                name: '500g±50g/袋【软糯香甜】超甜海南香蕉',
+                description: '皮薄肉厚水果熟食纤维细腻',
+                price: 2.9,
+                stock: 150,
+                img: 'https://img1.baidu.com/it/u=520702331,1822653794&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+                createdAt: Date.now() - 43200000,
+                updatedAt: Date.now() - 43200000
+            }
+        ];
+        // 按照创建时间倒序排序，新添加的商品显示在最顶部
+        products.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.createdAt).getTime();
+            const dateB = new Date(b.created_at || b.createdAt).getTime();
+            return dateB - dateA;
+        });
+        renderHomePageProducts();
+    }
+}
+
+// 渲染首页产品列表
+function renderHomePageProducts () {
+    if (!productList) return;
+
+    if (products.length === 0) {
+        productList.innerHTML = '<div class="empty-state">暂无商品数据</div>';
+        return;
+    }
+
+    productList.innerHTML = products.map((product, index) => `
+        <div class="brand_item-box">
+            <div class="brand_img-box item-${index + 1}" style="background-image: url(${product.img ? (product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img) : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>'}">
+                <a href="#" title="查看更多">查看更多</a>
+            </div>
+            <div class="brand_detail-box">
+                <h5>¥<span>${parseFloat(product.price).toFixed(2)}</span></h5>
+                <p>${product.name}</p>
+            </div>
+        </div>
+        `).join('');
+}
+
+// 显示管理面板
+function showAdminPanel () {
+    console.log('Showing admin panel');
+
+    // 隐藏首页内容，显示管理面板
+    if (heroArea) heroArea.style.display = 'none';
+    if (bg) bg.style.display = 'none';
+    if (contactSection) contactSection.style.display = 'none';
+    if (infoSection) infoSection.style.display = 'none';
+    if (footerSection) footerSection.style.display = 'none';
+
+    // 加载管理系统HTML
+    if (adminPanel) {
+        adminPanel.style.display = 'block';
+        adminPanel.innerHTML = `
+        <div id="app">
+            <header class="header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 600;">商品管理系统</h1>
+                <div class="header-tabs" style="display: flex; gap: 10px;">
+                    <button class="tab-btn active" data-tab="products" style="background: rgba(255, 255, 255, 0.2); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">商品管理</button>
+                    <button class="tab-btn" data-tab="orders" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">订单管理</button>
+                    <button class="tab-btn" data-tab="analytics" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">数据分析</button>
+                    <button class="tab-btn" onclick="logout()" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">退出登录</button>
+                </div>
+            </header>
+
+            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
+                <button class="btn btn-primary" id="add-product-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">添加商品</button>
+                <button class="btn btn-secondary" id="export-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导出数据</button>
+                <input type="file" id="file-input" accept=".json" style="display: none;">
+                <button class="btn btn-secondary" id="import-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导入数据</button>
+            </div>
+
+            <div class="header-actions" id="orders-actions" style="display: none; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+                <!-- 订单管理相关操作按钮 -->
+            </div>
+
+            <main class="main" style="padding: 20px;">
+                <!-- 商品管理页面 -->
+                <div id="products-page" class="page-content" style="display: block;">
+                    <!-- 搜索和过滤 -->
+                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                        <input type="text" id="search-input" placeholder="搜索商品名称" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1;">
+                    </div>
+
+                    <!-- 商品列表 -->
+                    <div class="product-list">
+                        <div id="products-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
+                        <table class="product-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">ID</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">图片</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">名称</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">描述</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">价格</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">库存</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">创建时间</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-list-body">
+                                <!-- 商品列表将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                        <div id="products-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">暂无商品数据</div>
+                    </div>
+                </div>
+
+                <!-- 订单管理页面 -->
+                <div id="orders-page" class="page-content" style="display: none;">
+                    <!-- 搜索和过滤 -->
+                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                        <input type="text" id="order-search-input" placeholder="搜索订单ID" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1;">
+                        <select id="order-status-filter" class="status-filter" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                            <option value="">全部状态</option>
+                            <option value="0">待支付</option>
+                            <option value="1">待发货</option>
+                            <option value="2">待收货</option>
+                            <option value="3">已完成</option>
+                            <option value="4">已取消</option>
+                        </select>
+                    </div>
+
+                    <!-- 订单列表 -->
+                    <div class="order-list">
+                        <div id="orders-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
+                        <table class="order-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">订单ID</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">用户ID</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">总金额</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">状态</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">收货地址</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">创建时间</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-list-body">
+                                <!-- 订单列表将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                        <div id="orders-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">暂无订单数据</div>
+                    </div>
+                </div>
+
+                <!-- 数据分析页面 -->
+                <div id="analytics-page" class="page-content" style="display: none;">
+                    <!-- 数据分析页面内容 -->
+                    <h2 style="margin-bottom: 20px; color: #333;">数据分析</h2>
+
+                    <div id="analytics-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
+
+                    <!-- 数据概览卡片 -->
+                    <div class="analytics-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div class="stat-card" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; color: #666; font-size: 16px;">总商品数</h3>
+                            <div class="stat-value" id="total-products" style="font-size: 24px; font-weight: 600; color: #667eea;">0</div>
+                        </div>
+                        <div class="stat-card" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; color: #666; font-size: 16px;">总订单数</h3>
+                            <div class="stat-value" id="total-orders" style="font-size: 24px; font-weight: 600; color: #667eea;">0</div>
+                        </div>
+                        <div class="stat-card" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; color: #666; font-size: 16px;">总销售额</h3>
+                            <div class="stat-value" id="total-sales" style="font-size: 24px; font-weight: 600; color: #667eea;">¥0.00</div>
+                        </div>
+                        <div class="stat-card" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
+                            <h3 style="margin: 0 0 10px 0; color: #666; font-size: 16px;">平均订单金额</h3>
+                            <div class="stat-value" id="avg-order-amount" style="font-size: 24px; font-weight: 600; color: #667eea;">¥0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- 图表区域 -->
+                    <div class="charts-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <!-- 订单流量分析图表 -->
+                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px;">
+                            <h3 style="margin: 0 0 20px 0; color: #333;">订单流量分析</h3>
+                            <canvas id="order-flow-chart" width="400" height="200"></canvas>
+                        </div>
+
+                        <!-- 商品销售分析图表 -->
+                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px;">
+                            <h3 style="margin: 0 0 20px 0; color: #333;">商品销售分析</h3>
+                            <canvas id="product-sales-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 销售数据表格 -->
+                    <div class="analytics-table-section" style="margin-top: 30px;">
+                        <h3 style="margin: 0 0 20px 0; color: #333;">销售数据明细</h3>
+                        <div class="analytics-table-container" style="overflow-x: auto;">
+                            <table class="analytics-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">商品名称</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">销售数量</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">销售金额</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">占比</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sales-data-body" style="max-height: 400px; overflow-y: auto;">
+                                    <!-- 销售数据将通过JavaScript动态生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="sales-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+                            <button class="pagination-btn" id="prev-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer;">上一页</button>
+                            <span class="pagination-info" id="pagination-info">第 1 页 / 共 1 页</span>
+                            <button class="pagination-btn" id="next-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer;">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 添加 / 编辑商品表单 -->
+            <div id="modal-overlay" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000;">
+                <div class="modal" style="background-color: white; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 id="modal-title" style="margin: 0; color: #333;">添加商品</h2>
+                        <button class="close-btn" id="close-modal-btn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="product-form">
+                            <input type="hidden" id="product-id">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-name" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品名称</label>
+                                <input type="text" id="product-name" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-description" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品描述</label>
+                                <textarea id="product-description" rows="3" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品价格</label>
+                                <input type="number" id="product-price" step="0.01" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-original-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">划线价格（原价）</label>
+                                <input type="number" id="product-original-price" step="0.01" min="0" class="form-input" placeholder="用于显示折扣信息，留空则不显示" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-category" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品分类</label>
+                                <select id="product-category" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                                    <option value="">加载中...</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-stock" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">库存数量</label>
+                                <input type="number" id="product-stock" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label for="product-img" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品图片</label>
+                                <input type="text" id="product-img" placeholder="图片预览（自动生成）" class="form-input" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 10px;">
+                                <input type="file" id="product-img-file" accept="image/*" style="margin-top: 10px;">
+                                <small style="color: #666; display: block; margin-top: 5px;">支持JPG、PNG等格式图片上传</small>
+                            </div>
+                            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" id="cancel-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer;">取消</button>
+                                <button type="submit" class="btn btn-primary" id="submit-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer;">添加</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div id="error-message" class="error-message" style="display: none; position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; z-index: 1000; display: flex; justify-content: space-between; align-items: center; min-width: 300px;">
+                <span id="error-text"></span>
+                <button class="close-btn" id="close-error-btn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+        </div>
+        `;
+
+        // 重新获取DOM元素并绑定事件
+        getDOMElements();
+        bindEvents();
+    }
+}
+
+// 隐藏管理面板
+function hideAdminPanel () {
+    console.log('Hiding admin panel');
+
+    // 显示首页内容，隐藏管理面板
+    const heroArea = document.querySelector('.hero_area');
+    if (heroArea) {
+        heroArea.style.display = 'block';
+    }
+
+    const bg = document.querySelector('.bg');
+    if (bg) {
+        bg.style.display = 'block';
+    }
+
+    const contactSection = document.querySelector('.contact_section');
+    if (contactSection) {
+        contactSection.style.display = 'block';
+    }
+
+    const infoSection = document.querySelector('.info_section');
+    if (infoSection) {
+        infoSection.style.display = 'block';
+    }
+
+    if (adminPanel) {
+        adminPanel.style.display = 'none';
+    }
+}
+
