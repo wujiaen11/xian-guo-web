@@ -12,7 +12,7 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
+        : 'https://xianguo.site';
 
 // DOM元素
 let modalOverlay;
@@ -40,6 +40,7 @@ let fileInput;
 let errorMessage;
 let errorText;
 let closeErrorBtn;
+let emptyAddBtn;
 // 订单相关DOM元素
 let tabBtns;
 let productsActions;
@@ -112,6 +113,7 @@ function getDOMElements () {
     errorMessage = document.getElementById('error-message');
     errorText = document.getElementById('error-text');
     closeErrorBtn = document.getElementById('close-error-btn');
+    emptyAddBtn = document.getElementById('empty-add-btn');
 
     // 订单相关元素
     tabBtns = document.querySelectorAll('.tab-btn');
@@ -158,6 +160,11 @@ function bindEvents () {
     if (addProductBtn) {
         addProductBtn.addEventListener('click', openAddModal);
         console.log('Add product button event bound');
+    }
+
+    if (emptyAddBtn) {
+        emptyAddBtn.addEventListener('click', openAddModal);
+        console.log('Empty add button event bound');
     }
 
     if (closeModalBtn) {
@@ -250,7 +257,7 @@ function handleTabChange (e) {
 
     // 切换页面内容
     if (tabName === 'products') {
-        productsActions.style.display = 'block';
+        productsActions.style.display = 'flex';
         ordersActions.style.display = 'none';
         productsPage.style.display = 'block';
         ordersPage.style.display = 'none';
@@ -259,7 +266,7 @@ function handleTabChange (e) {
         loadProducts();
     } else if (tabName === 'orders') {
         productsActions.style.display = 'none';
-        ordersActions.style.display = 'block';
+        ordersActions.style.display = 'flex';
         productsPage.style.display = 'none';
         ordersPage.style.display = 'block';
         analyticsPage.style.display = 'none';
@@ -482,7 +489,7 @@ function renderProductList (filteredProducts = null) {
 
     if (displayProducts.length === 0) {
         productListBody.innerHTML = '';
-        productsEmptyState.style.display = 'block';
+        productsEmptyState.style.display = 'flex';
         return;
     }
 
@@ -490,15 +497,21 @@ function renderProductList (filteredProducts = null) {
     productListBody.innerHTML = displayProducts.map(product => `
         <tr>
             <td>${product.id}</td>
-    <td>${product.img ? `<img src="${product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect width=\'80\' height=\'80\' fill=\'#f0f0f0\'/><text x=\'40\' y=\'45\' text-anchor=\'middle\' fill=\'#999\' font-size=\'12\'>图片加载失败</text></svg>';">` : '-'}</td>
+    <td>${product.img ? `<img src="${product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect width=\'80\' height=\'80\' fill=\'#f0f0f0\'/><text x=\'40\' y=\'45\' text-anchor=\'middle\' fill=\'#999\' font-size=\'12\'>图片加载失败</text></svg>';">` : '-'}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
-            <td>${parseFloat(product.price).toFixed(2)}</td>
+            <td>¥${parseFloat(product.price).toFixed(2)}</td>
             <td>${product.stock}</td>
             <td>${formatDate(product.created_at || product.createdAt)}</td>
             <td>
-                <button class="btn btn-sm btn-edit" onclick="openEditModal('${product.id}')">编辑</button>
-                <button class="btn btn-sm btn-delete" onclick="deleteProduct('${product.id}')">删除</button>
+                <button class="btn btn-sm btn-edit" onclick="openEditModal('${product.id}')">
+                    <i class="fas fa-edit"></i>
+                    <span>编辑</span>
+                </button>
+                <button class="btn btn-sm btn-delete" onclick="deleteProduct('${product.id}')">
+                    <i class="fas fa-trash"></i>
+                    <span>删除</span>
+                </button>
             </td>
         </tr>
     `).join('');
@@ -517,7 +530,7 @@ function renderOrderList (filteredOrders = null) {
 
     if (displayOrders.length === 0) {
         orderListBody.innerHTML = '';
-        ordersEmptyState.style.display = 'block';
+        ordersEmptyState.style.display = 'flex';
         return;
     }
 
@@ -526,13 +539,19 @@ function renderOrderList (filteredOrders = null) {
         <tr>
         <td>${order.id}</td>
             <td>${order.user_id}</td>
-            <td>${parseFloat(order.total_price).toFixed(2)}</td>
+            <td>¥${parseFloat(order.total_price).toFixed(2)}</td>
             <td>${getStatusText(order.status)}</td>
             <td>${order.shipping_address}</td>
             <td>${formatDate(order.created_at)}</td>
             <td>
-                <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">查看详情</button>
-                <button class="btn btn-sm ${order.status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${order.status})" ${order.status >= 3 ? 'disabled' : ''}>${order.status < 3 ? '更新状态' : '已完成'}</button>
+                <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
+                    <i class="fas fa-eye"></i>
+                    <span>查看</span>
+                </button>
+                <button class="btn btn-sm ${order.status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${order.status})" ${order.status >= 3 ? 'disabled' : ''}>
+                    <i class="fas fa-sync"></i>
+                    <span>${order.status < 3 ? '更新' : '已完成'}</span>
+                </button>
             </td>
         </tr>
     `).join('');
@@ -854,7 +873,7 @@ async function importData (e) {
 // 显示错误信息
 function showError (message, type = 'error') {
     errorText.textContent = message;
-    errorMessage.style.backgroundColor = type === 'success' ? '#2ecc71' : '#e74c3c';
+    errorMessage.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
     errorMessage.style.display = 'flex';
 
     // 3秒后自动隐藏
@@ -931,8 +950,8 @@ function calculateAnalyticsMetrics (products, orders) {
     // 更新概览卡片
     if (totalProducts) totalProducts.textContent = totalProductsCount;
     if (totalOrders) totalOrders.textContent = totalOrdersCount;
-    if (totalSales) totalSales.textContent = formatCurrency(totalSalesAmount);
-    if (avgOrderAmount) avgOrderAmount.textContent = formatCurrency(avgOrderValue);
+    if (totalSales) totalSales.textContent = `¥${totalSalesAmount.toFixed(2)}`;
+    if (avgOrderAmount) avgOrderAmount.textContent = `¥${avgOrderValue.toFixed(2)}`;
 
     // 2. 生成订单流量数据（最近7天）
     const last7Days = getLast7Days();
@@ -999,8 +1018,6 @@ function refreshAnalyticsDOM () {
 
 // 渲染订单流量分析图表
 function renderOrderFlowChart (orderFlowData) {
-    // 移除过多的日志输出
-
     // 确保canvas元素存在且Chart.js已加载
     if (!orderFlowChart || typeof Chart === 'undefined') {
         return;
@@ -1021,8 +1038,8 @@ function renderOrderFlowChart (orderFlowData) {
                 datasets: [{
                     label: '订单数量',
                     data: orderFlowData.map(item => item.count),
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4
@@ -1068,8 +1085,6 @@ function renderOrderFlowChart (orderFlowData) {
 
 // 渲染商品销售分析图表
 function renderProductSalesChart (productSalesData) {
-    // 移除过多的日志输出
-
     // 确保canvas元素存在且Chart.js已加载
     if (!productSalesChart || typeof Chart === 'undefined') {
         return;
@@ -1094,11 +1109,11 @@ function renderProductSalesChart (productSalesData) {
                     label: '销售金额',
                     data: topProducts.map(item => item.salesAmount),
                     backgroundColor: [
-                        '#3498db',
-                        '#2ecc71',
-                        '#f39c12',
-                        '#e74c3c',
-                        '#9b59b6'
+                        '#4CAF50',
+                        '#2196F3',
+                        '#FF9800',
+                        '#9C27B0',
+                        '#F44336'
                     ],
                     borderRadius: 4
                 }]
@@ -1186,7 +1201,7 @@ function renderSalesDataTable (productSalesData, totalSalesAmount) {
             <tr>
                 <td>${product.name}</td>
                 <td>${product.salesCount}</td>
-                <td>${formatCurrency(product.salesAmount)}</td>
+                <td>¥${product.salesAmount.toFixed(2)}</td>
                 <td>${percentage}%</td>
             </tr>
         `;
@@ -1264,11 +1279,6 @@ function generateMockAnalyticsData () {
     } else {
         console.warn('salesDataBody not found, skipping mock analytics data generation');
     }
-}
-
-// 辅助函数：格式化货币
-function formatCurrency (amount) {
-    return `¥${parseFloat(amount).toFixed(2)}`;
 }
 
 // 辅助函数：获取最近7天的日期

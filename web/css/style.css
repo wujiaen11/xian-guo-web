@@ -512,3 +512,333 @@ body {
         max-height: 300px;
     }
 }
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.charts-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background-color: var(--background-white);
+    padding: 24px;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    min-height: 320px;
+    border: 1px solid var(--border-color);
+}
+
+.chart-container h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 250px !important;
+}
+
+.analytics-table-section {
+    margin-top: 30px;
+}
+
+.analytics-table-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.analytics-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--background-white);
+    box-shadow: none;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.analytics-table th {
+    background-color: var(--background-light);
+    font-weight: 600;
+    color: var(--text-primary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.analytics-table tr:hover {
+    background-color: rgba(76, 175, 80, 0.05);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding: 12px;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-white);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.pagination-btn:disabled {
+    background-color: var(--background-light);
+    color: var(--text-light);
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    #app {
+        padding: 10px;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .header-tabs {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .header-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .search-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .status-filter {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    .product-table,
+    .order-table,
+    .analytics-table {
+        font-size: 12px;
+    }
+
+    .product-table th,
+    .product-table td,
+    .order-table th,
+    .order-table td,
+    .analytics-table th,
+    .analytics-table td {
+        padding: 10px;
+    }
+
+    .analytics-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .charts-section {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        overflow: auto;
+    }
+
+    .analytics-table-container {
+        max-height: 300px;
+    }
+
+    .modal {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .tab-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .main {
+        padding: 16px;
+    }
+
+    .search-input {
+        padding: 8px 10px 8px 36px;
+    }
+
+    .chart-container {
+        padding: 16px;
+        min-height: 280px;
+    }
+
+    .chart-container canvas {
+        height: 200px !important;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+    }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-light);
+    border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text-light);
+    border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* 加载动画 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--background-light);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 响应式表格 */
+@media (max-width: 768px) {
+    .product-table,
+    .order-table,
+    .analytics-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .product-table thead,
+    .order-table thead,
+    .analytics-table thead {
+        display: block;
+        float: left;
+    }
+
+    .product-table tbody,
+    .order-table tbody,
+    .analytics-table tbody {
+        display: block;
+        width: auto;
+        overflow-x: auto;
+    }
+
+    .product-table tr,
+    .order-table tr,
+    .analytics-table tr {
+        display: block;
+        clear: both;
+    }
+
+    .product-table th,
+    .product-table td,
+    .order-table th,
+    .order-table td,
+    .analytics-table th,
+    .analytics-table td {
+        display: block;
+        width: 200px;
+        float: left;
+        text-align: left;
+    }
+
+    .product-table th,
+    .order-table th,
+    .analytics-table th {
+        background-color: var(--background-light);
+        font-weight: 600;
+    }
+}
