@@ -1548,9 +1548,17 @@ async function handleLogin (e) {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
         // 管理员登录成功
         isAuthenticated = true;
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('username', username);
-        localStorage.setItem('userType', 'admin');
+        try {
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('username', username);
+            localStorage.setItem('userType', 'admin');
+        } catch (error) {
+            console.warn('localStorage access blocked, using in-memory storage:', error);
+            // 使用内存存储作为降级方案
+            window.sessionStorage && sessionStorage.setItem('isAuthenticated', 'true');
+            window.sessionStorage && sessionStorage.setItem('username', username);
+            window.sessionStorage && sessionStorage.setItem('userType', 'admin');
+        }
 
         // 更新导航栏显示为用户名
         updateNavbarUserInfo(username);
@@ -1562,16 +1570,29 @@ async function handleLogin (e) {
         closeLoginModalFunc();
     } else {
         // 从localStorage获取已注册用户
-        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        let registeredUsers = [];
+        try {
+            registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        } catch (error) {
+            console.warn('localStorage access blocked, using empty user list:', error);
+        }
 
         const userExists = registeredUsers.some(user => user.username === username && user.password === password);
 
         if (userExists) {
             // 普通用户登录成功
             isAuthenticated = true;
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('username', username);
-            localStorage.setItem('userType', 'user');
+            try {
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('username', username);
+                localStorage.setItem('userType', 'user');
+            } catch (error) {
+                console.warn('localStorage access blocked, using in-memory storage:', error);
+                // 使用内存存储作为降级方案
+                window.sessionStorage && sessionStorage.setItem('isAuthenticated', 'true');
+                window.sessionStorage && sessionStorage.setItem('username', username);
+                window.sessionStorage && sessionStorage.setItem('userType', 'user');
+            }
 
             // 更新导航栏显示为用户名
             updateNavbarUserInfo(username);
@@ -1605,7 +1626,12 @@ async function handleRegister (e) {
     }
 
     // 从localStorage获取已注册用户
-    let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    let registeredUsers = [];
+    try {
+        registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    } catch (error) {
+        console.warn('localStorage access blocked, using empty user list:', error);
+    }
 
     // 检查用户名是否已存在
     if (registeredUsers.some(user => user.username === username)) {
@@ -1615,7 +1641,13 @@ async function handleRegister (e) {
 
     // 存储新用户到localStorage
     registeredUsers.push({ username, password });
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    try {
+        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    } catch (error) {
+        console.warn('localStorage access blocked, registration data not saved:', error);
+        showError('注册成功，但由于浏览器限制，数据可能无法持久保存', 'success');
+        // 继续执行，因为即使数据不持久化，注册过程本身是成功的
+    }
 
     showError('注册成功，请登录', 'success');
 
@@ -1628,14 +1660,22 @@ async function handleRegister (e) {
 
 // 检查是否已经登录
 function checkAuthentication () {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    isAuthenticated = storedAuth === 'true';
+    try {
+        const storedAuth = localStorage.getItem('isAuthenticated');
+        isAuthenticated = storedAuth === 'true';
 
-    // 如果已登录，更新导航栏显示为用户名
-    if (isAuthenticated) {
-        const username = localStorage.getItem('username');
-        if (username) {
-            updateNavbarUserInfo(username);
+        // 如果已登录，更新导航栏显示为用户名
+        if (isAuthenticated) {
+            const username = localStorage.getItem('username');
+            if (username) {
+                updateNavbarUserInfo(username);
+            }
+        }
+    } catch (error) {
+        console.warn('localStorage access blocked, using in-memory storage:', error);
+        // 使用内存存储作为降级方案
+        if (!window.sessionStorage) {
+            console.warn('Both localStorage and sessionStorage are blocked');
         }
     }
 }
@@ -1693,10 +1733,23 @@ function logout () {
     isAuthenticated = false;
     console.log('设置 isAuthenticated 为 false');
 
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userType');
-    console.log('清除本地存储中的用户信息');
+    try {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userType');
+        console.log('清除本地存储中的用户信息');
+    } catch (error) {
+        console.warn('localStorage access blocked, cannot clear storage:', error);
+        // 尝试使用sessionStorage作为降级方案
+        try {
+            window.sessionStorage && sessionStorage.removeItem('isAuthenticated');
+            window.sessionStorage && sessionStorage.removeItem('username');
+            window.sessionStorage && sessionStorage.removeItem('userType');
+            console.log('清除会话存储中的用户信息');
+        } catch (sessionError) {
+            console.warn('sessionStorage access also blocked:', sessionError);
+        }
+    }
 
     // 关闭登录模态框
     closeLoginModalFunc();
@@ -1742,6 +1795,19 @@ function openLoginModal () {
         checkAuthentication();
 
         if (isAuthenticated) {
+            // 获取用户名，处理localStorage访问被阻止的情况
+            let username = '用户';
+            try {
+                username = localStorage.getItem('username') || '用户';
+            } catch (error) {
+                console.warn('localStorage access blocked, using default username:', error);
+                try {
+                    username = window.sessionStorage && sessionStorage.getItem('username') || '用户';
+                } catch (sessionError) {
+                    console.warn('sessionStorage access also blocked:', sessionError);
+                }
+            }
+
             // 已登录状态，修改模态框内容为退出登录
             const modalContent = adminLoginModal.querySelector('div > div');
             if (modalContent) {
@@ -1758,7 +1824,7 @@ function openLoginModal () {
                             >&times;</button>
                         </div>
                         <div style="text-align: center; padding: 20px 0;">
-                            <p style="font-size: 18px; color: #333; margin-bottom: 30px;">欢迎，${localStorage.getItem('username')}</p>
+                            <p style="font-size: 18px; color: #333; margin-bottom: 30px;">欢迎，${username}</p>
                             <button
                                 type="button"
                                 id="logout-btn"
