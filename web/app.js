@@ -100,7 +100,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 如果已登录，根据用户类型决定显示内容
     if (isAuthenticated) {
-        const userType = localStorage.getItem('userType');
+        let userType = 'user';
+        try {
+            userType = localStorage.getItem('userType') || 'user';
+        } catch (error) {
+            console.warn('localStorage access blocked, using default user type:', error);
+            try {
+                userType = window.sessionStorage && sessionStorage.getItem('userType') || 'user';
+            } catch (sessionError) {
+                console.warn('sessionStorage access also blocked:', sessionError);
+            }
+        }
         if (userType === 'admin') {
             // 管理员登录，显示管理面板
             await loadInitialData();
@@ -233,18 +243,6 @@ function getDOMElements () {
 // 绑定事件
 function bindEvents () {
     console.log('Binding events...');
-
-    // 登录表单事件
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-        console.log('Login form submit event bound');
-    }
-
-    // 注册表单事件
-    if (registerForm) {
-        registerForm.addEventListener('submit', handleRegister);
-        console.log('Register form submit event bound');
-    }
 
     // 首页管理员登录按钮事件
     if (adminLoginBtn) {
