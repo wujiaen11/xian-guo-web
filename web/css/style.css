@@ -337,8 +337,8 @@ a:focus {
 
 .brand_item-box {
   width: 30vw;
-  max-width: 265px;
-  min-width: 100px;
+  max-width: 200px;
+  min-width: 50px;
   margin: 30px 10px 0 10px;
 
 }
