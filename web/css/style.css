@@ -548,11 +548,13 @@ a:focus {
   height: 30vw;
   max-height: 310px;
   min-height: 200px;
-  background-size: cover;
+  background-size: contain;
   background-position: center;
+  background-repeat: no-repeat;
   position: relative;
   border-radius: 10px;
   border: 2px double black;
+  background-color: #f8f9fa;
 }
 
 .brand_img-box {
@@ -1006,7 +1008,7 @@ a:focus {
 /* Responsive brand section */
 @media (max-width: 768px) {
   .brand_item-box {
-    width: 100%;
+    width: 45vw;
     max-width: 150px;
     margin: 15px 3px 0 3px;
   }
