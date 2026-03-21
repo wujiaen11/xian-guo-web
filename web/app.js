@@ -1726,6 +1726,10 @@ function logout () {
         console.log('未找到导航栏登录链接');
     }
 
+    // 隐藏管理面板，显示首页内容
+    hideAdminPanel();
+    console.log('隐藏管理面板，显示首页内容');
+
     // 显示退出登录成功消息
     showError('已成功退出登录', 'success');
     console.log('显示退出登录成功消息');
@@ -2045,6 +2049,26 @@ async function loadHomePageProducts () {
                 img: 'https://img1.baidu.com/it/u=520702331,1822653794&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
                 createdAt: Date.now() - 43200000,
                 updatedAt: Date.now() - 43200000
+            },
+            {
+                id: '3',
+                name: '500g±50g/份【清脆爽口】红富士苹果',
+                description: '脆甜多汁，营养丰富',
+                price: 4.5,
+                stock: 120,
+                img: 'https://img2.baidu.com/it/u=3838584913,2826472502&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+                createdAt: Date.now() - 21600000,
+                updatedAt: Date.now() - 21600000
+            },
+            {
+                id: '4',
+                name: '500g±50g/串【香甜多汁】新疆葡萄',
+                description: '粒大饱满，甜度高',
+                price: 5.8,
+                stock: 80,
+                img: 'https://img1.baidu.com/it/u=2357699254,3864133814&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+                createdAt: Date.now() - 10800000,
+                updatedAt: Date.now() - 10800000
             }
         ];
         // 按照创建时间倒序排序，新添加的商品显示在最顶部
@@ -2307,9 +2331,8 @@ function showAdminPanel () {
             </div>
 
             <!-- 错误提示 -->
-            <div id="error-message" class="error-message" style="display: none; position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; z-index: 1000; display: flex; justify-content: space-between; align-items: center; min-width: 300px;">
+            <div id="error-message" class="error-message" style="display: none; position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 4px; color: white; z-index: 1000; display: flex; align-items: center; min-width: 300px;">
                 <span id="error-text"></span>
-                <button class="close-btn" id="close-error-btn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
         </div>
         `;
@@ -2343,6 +2366,11 @@ function hideAdminPanel () {
     const infoSection = document.querySelector('.info_section');
     if (infoSection) {
         infoSection.style.display = 'block';
+    }
+
+    const footerSection = document.querySelector('.footer_section');
+    if (footerSection) {
+        footerSection.style.display = 'block';
     }
 
     if (adminPanel) {

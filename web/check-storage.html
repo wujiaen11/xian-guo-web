@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检查LocalStorage</title>
+</head>
+<body>
+    <h1>LocalStorage 状态检查</h1>
+    <div id="storage-info"></div>
+    <button onclick="clearStorage()">清除所有存储</button>
+    <script>
+        function checkStorage() {
+            const storageInfo = document.getElementById('storage-info');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            const username = localStorage.getItem('username');
+            const userType = localStorage.getItem('userType');
+            
+            storageInfo.innerHTML = `
+                <p>isAuthenticated: ${isAuthenticated}</p>
+                <p>username: ${username}</p>
+                <p>userType: ${userType}</p>
+            `;
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            alert('LocalStorage已清除');
+            checkStorage();
+        }
+        
+        // 页面加载时检查
+        checkStorage();
+    </script>
+</body>
+</html>
