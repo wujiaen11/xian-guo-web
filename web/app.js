@@ -1791,6 +1791,12 @@ function logout () {
 // 打开登录模态框
 function openLoginModal () {
     if (adminLoginModal) {
+        // 关闭导航下拉菜单
+        const navbarCollapse = document.getElementById('navbarSupportedContent');
+        if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+            navbarCollapse.classList.remove('show');
+        }
+
         // 检查用户是否已登录
         checkAuthentication();
 
@@ -2184,66 +2190,161 @@ function showAdminPanel () {
     if (adminPanel) {
         adminPanel.style.display = 'block';
         adminPanel.innerHTML = `
-        <div id="app">
-            <header class="header" style="background-color: #b5caee; color: #191919; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h1 style="margin: 0; font-size: 24px; font-weight: 600;">商品管理系统</h1>
+        <div id="app" style="width: 100%; height: 100vh; overflow: hidden; background-color: #f5f5f5;">
+            <style>
+                /* 全局样式 */
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+                
+                /* 禁止页面左右滑动 */
+                body {
+                    overflow-x: hidden;
+                }
+                
+                /* 响应式布局 */
+                @media (max-width: 768px) {
+                    .header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        padding: 15px;
+                    }
+                    
+                    .header h1 {
+                        font-size: 20px !important;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .header-tabs {
+                        width: 100%;
+                        flex-wrap: wrap;
+                    }
+                    
+                    .header-tabs button {
+                        flex: 1;
+                        min-width: 80px;
+                        padding: 6px 12px !important;
+                        font-size: 14px;
+                    }
+                    
+                    .header-actions {
+                        padding: 15px !important;
+                        flex-wrap: wrap;
+                    }
+                    
+                    .header-actions button {
+                        flex: 1;
+                        min-width: 120px;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .main {
+                        padding: 15px !important;
+                    }
+                    
+                    .search-filter {
+                        flex-direction: column;
+                    }
+                    
+                    .search-filter input,
+                    .search-filter select {
+                        width: 100% !important;
+                    }
+                    
+                    .product-table,
+                    .order-table,
+                    .analytics-table {
+                        font-size: 12px;
+                    }
+                    
+                    .product-table th,
+                    .order-table th,
+                    .analytics-table th {
+                        padding: 8px !important;
+                    }
+                    
+                    .product-table td,
+                    .order-table td,
+                    .analytics-table td {
+                        padding: 8px !important;
+                    }
+                    
+                    .analytics-overview {
+                        grid-template-columns: 1fr !important;
+                    }
+                    
+                    .charts-section {
+                        grid-template-columns: 1fr !important;
+                    }
+                    
+                    .chart-container {
+                        height: 250px !important;
+                    }
+                }
+            </style>
+            <header class="header" style="background-color: #b5caee; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: white;">商品管理系统</h1>
                 <div class="header-tabs" style="display: flex; gap: 10px;">
-                    <button class="tab-btn active" data-tab="products" style="background: rgba(0, 0, 0, 0.3); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">商品管理</button>
-                    <button class="tab-btn" data-tab="orders" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">订单管理</button>
-                    <button class="tab-btn" data-tab="analytics" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">数据分析</button>
-                    <button class="tab-btn" onclick="logout()" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">退出登录</button>
+                    <button class="tab-btn active" data-tab="products" style="background: rgba(0, 0, 0, 0.3); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">商品管理</button>
+                    <button class="tab-btn" data-tab="orders" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">订单管理</button>
+                    <button class="tab-btn" data-tab="analytics" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">数据分析</button>
+                    <button class="tab-btn" onclick="logout()" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">退出登录</button>
                 </div>
             </header>
 
-            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
+            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px; width: 100%;">
                 <button class="btn btn-primary" id="add-product-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">添加商品</button>
                 <button class="btn btn-secondary" id="export-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导出数据</button>
                 <input type="file" id="file-input" accept=".json" style="display: none;">
                 <button class="btn btn-secondary" id="import-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导入数据</button>
             </div>
 
-            <div class="header-actions" id="orders-actions" style="display: none; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+            <div class="header-actions" id="orders-actions" style="display: none; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; width: 100%;">
                 <!-- 订单管理相关操作按钮 -->
             </div>
 
-            <main class="main" style="padding: 20px;">
+            <main class="main" style="padding: 20px; width: 100%; height: calc(100vh - 160px); overflow-y: auto;">
                 <!-- 商品管理页面 -->
-                <div id="products-page" class="page-content" style="display: block;">
+                <div id="products-page" class="page-content" style="display: block; width: 100%;">
                     <!-- 搜索和过滤 -->
-                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px;">
-                        <input type="text" id="search-input" placeholder="搜索商品名称" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1;">
+                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px; width: 100%;">
+                        <input type="text" id="search-input" placeholder="搜索商品名称" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1; width: 100%;">
                     </div>
 
                     <!-- 商品列表 -->
-                    <div class="product-list">
-                        <div id="products-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
-                        <table class="product-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                            <thead style="background-color: #f8f9fa;">
-                                <tr>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">ID</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">图片</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">名称</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">描述</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">价格</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">库存</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">创建时间</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="product-list-body">
-                                <!-- 商品列表将通过JavaScript动态生成 -->
-                            </tbody>
-                        </table>
-                        <div id="products-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">暂无商品数据</div>
+                    <div class="product-list" style="width: 100%;">
+                        <div id="products-loading" class="loading-state" style="display: none; text-align: center; padding: 20px; color: #333;">加载中...</div>
+                        <div style="overflow-x: auto; width: 100%;">
+                            <table class="product-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">ID</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">图片</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">名称</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">描述</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">价格</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">库存</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">创建时间</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-list-body">
+                                    <!-- 商品列表将通过JavaScript动态生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="products-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); color: #333;">暂无商品数据</div>
                     </div>
                 </div>
 
                 <!-- 订单管理页面 -->
-                <div id="orders-page" class="page-content" style="display: none;">
+                <div id="orders-page" class="page-content" style="display: none; width: 100%;">
                     <!-- 搜索和过滤 -->
-                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px;">
-                        <input type="text" id="order-search-input" placeholder="搜索订单ID" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1;">
-                        <select id="order-status-filter" class="status-filter" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                        <input type="text" id="order-search-input" placeholder="搜索订单ID" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1; min-width: 200px;">
+                        <select id="order-status-filter" class="status-filter" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; min-width: 150px;">
                             <option value="">全部状态</option>
                             <option value="0">待支付</option>
                             <option value="1">待发货</option>
@@ -2254,37 +2355,39 @@ function showAdminPanel () {
                     </div>
 
                     <!-- 订单列表 -->
-                    <div class="order-list">
-                        <div id="orders-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
-                        <table class="order-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                            <thead style="background-color: #f8f9fa;">
-                                <tr>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">订单ID</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">用户ID</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">总金额</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">状态</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">收货地址</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">创建时间</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="order-list-body">
-                                <!-- 订单列表将通过JavaScript动态生成 -->
-                            </tbody>
-                        </table>
-                        <div id="orders-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">暂无订单数据</div>
+                    <div class="order-list" style="width: 100%;">
+                        <div id="orders-loading" class="loading-state" style="display: none; text-align: center; padding: 20px; color: #333;">加载中...</div>
+                        <div style="overflow-x: auto; width: 100%;">
+                            <table class="order-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">订单ID</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">用户ID</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">总金额</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">状态</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">收货地址</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">创建时间</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="order-list-body">
+                                    <!-- 订单列表将通过JavaScript动态生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="orders-empty-state" class="empty-state" style="display: none; text-align: center; padding: 40px; background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); color: #333;">暂无订单数据</div>
                     </div>
                 </div>
 
                 <!-- 数据分析页面 -->
-                <div id="analytics-page" class="page-content" style="display: none;">
+                <div id="analytics-page" class="page-content" style="display: none; width: 100%;">
                     <!-- 数据分析页面内容 -->
                     <h2 style="margin-bottom: 20px; color: #333;">数据分析</h2>
 
-                    <div id="analytics-loading" class="loading-state" style="display: none; text-align: center; padding: 20px;">加载中...</div>
+                    <div id="analytics-loading" class="loading-state" style="display: none; text-align: center; padding: 20px; color: #333;">加载中...</div>
 
                     <!-- 数据概览卡片 -->
-                    <div class="analytics-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="analytics-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; width: 100%;">
                         <div class="stat-card" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
                             <h3 style="margin: 0 0 10px 0; color: #666; font-size: 16px;">总商品数</h3>
                             <div class="stat-value" id="total-products" style="font-size: 24px; font-weight: 600; color: #667eea;">0</div>
@@ -2304,31 +2407,31 @@ function showAdminPanel () {
                     </div>
 
                     <!-- 图表区域 -->
-                    <div class="charts-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="charts-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px; width: 100%;">
                         <!-- 订单流量分析图表 -->
-                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px;">
+                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px; width: 100%;">
                             <h3 style="margin: 0 0 20px 0; color: #333;">订单流量分析</h3>
                             <canvas id="order-flow-chart" width="400" height="200"></canvas>
                         </div>
 
                         <!-- 商品销售分析图表 -->
-                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px;">
+                        <div class="chart-container" style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 300px; width: 100%;">
                             <h3 style="margin: 0 0 20px 0; color: #333;">商品销售分析</h3>
                             <canvas id="product-sales-chart" width="400" height="200"></canvas>
                         </div>
                     </div>
 
                     <!-- 销售数据表格 -->
-                    <div class="analytics-table-section" style="margin-top: 30px;">
+                    <div class="analytics-table-section" style="margin-top: 30px; width: 100%;">
                         <h3 style="margin: 0 0 20px 0; color: #333;">销售数据明细</h3>
-                        <div class="analytics-table-container" style="overflow-x: auto;">
+                        <div class="analytics-table-container" style="overflow-x: auto; width: 100%;">
                             <table class="analytics-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 <thead style="background-color: #f8f9fa;">
                                     <tr>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">商品名称</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">销售数量</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">销售金额</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">占比</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">商品名称</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">销售数量</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">销售金额</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">占比</th>
                                     </tr>
                                 </thead>
                                 <tbody id="sales-data-body" style="max-height: 400px; overflow-y: auto;">
@@ -2336,10 +2439,10 @@ function showAdminPanel () {
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination" id="sales-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
-                            <button class="pagination-btn" id="prev-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer;">上一页</button>
-                            <span class="pagination-info" id="pagination-info">第 1 页 / 共 1 页</span>
-                            <button class="pagination-btn" id="next-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer;">下一页</button>
+                        <div class="pagination" id="sales-pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; width: 100%;">
+                            <button class="pagination-btn" id="prev-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; color: #333;">上一页</button>
+                            <span class="pagination-info" id="pagination-info" style="color: #333;">第 1 页 / 共 1 页</span>
+                            <button class="pagination-btn" id="next-page-btn" disabled style="padding: 6px 12px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; color: #333;">下一页</button>
                         </div>
                     </div>
                 </div>
