@@ -545,19 +545,13 @@ a:focus {
 }
 
 .brand_img-box {
-  height: 30vw;
-  max-height: 310px;
-  min-height: 200px;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  width: 100%;
+  padding-top: 100%;
   position: relative;
   border-radius: 10px;
   border: 2px double black;
   background-color: #f8f9fa;
-}
-
-.brand_img-box {
+  overflow: hidden;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -567,7 +561,6 @@ a:focus {
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .brand_img-box a {
@@ -1011,12 +1004,6 @@ a:focus {
     width: 45vw;
     max-width: 150px;
     margin: 15px 3px 0 3px;
-  }
-
-  .brand_img-box {
-    height: 45vw;
-    max-height: 150px;
-    min-height: 100px;
   }
 }
 

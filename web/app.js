@@ -2172,14 +2172,15 @@ function renderHomePageProducts () {
 
     productList.innerHTML = products.map((product, index) => `
         <div class="brand_item-box">
-            <div class="brand_img-box item-${index + 1}" style="background-image: url(${product.img ? (product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img) : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>'}">
-                <a href="#" title="查看更多">查看更多</a>
-            </div>
-            <div class="brand_detail-box">
-                <h5>¥<span>${parseFloat(product.price).toFixed(2)}</span></h5>
-                <p>${product.name}</p>
-            </div>
+            <div class="brand_img-box item-${index + 1}" style="width: 100%; padding-top: 100%;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; background-image: url(${product.img ? (product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img) : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>\'}"></div>
+            < a href = "#" title = "查看更多" > 查看更多</a >
+            </div >
+        <div class="brand_detail-box">
+            <h5>¥<span>${parseFloat(product.price).toFixed(2)}</span></h5>
+            <p>${product.name}</p>
         </div>
+        </div >
         `).join('');
 }
 
@@ -2198,7 +2199,7 @@ function showAdminPanel () {
     if (adminPanel) {
         adminPanel.style.display = 'block';
         adminPanel.innerHTML = `
-        <div id="app" style="width: 100%; height: 100vh; overflow: hidden; background-color: #f5f5f5;">
+        < div id = "app" style = "width: 100%; height: 100vh; overflow: hidden; background-color: #f5f5f5;" >
             <style>
                 /* 全局样式 */
                 * {
@@ -2456,55 +2457,55 @@ function showAdminPanel () {
                 </div>
             </main>
 
-            <!-- 添加 / 编辑商品表单 -->
-            <div id="modal-overlay" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000;">
-                <div class="modal" style="background-color: white; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
-                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 id="modal-title" style="margin: 0; color: #333;">添加商品</h2>
-                        <button class="close-btn" id="close-modal-btn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="product-form">
-                            <input type="hidden" id="product-id">
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-name" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品名称</label>
-                                <input type="text" id="product-name" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-description" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品描述</label>
-                                <textarea id="product-description" rows="3" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;"></textarea>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品价格</label>
-                                <input type="number" id="product-price" step="0.01" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-original-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">划线价格（原价）</label>
-                                <input type="number" id="product-original-price" step="0.01" min="0" class="form-input" placeholder="用于显示折扣信息，留空则不显示" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-category" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品分类</label>
-                                <select id="product-category" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                                    <option value="">加载中...</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-stock" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">库存数量</label>
-                                <input type="number" id="product-stock" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <label for="product-img" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品图片</label>
-                                <input type="text" id="product-img" placeholder="图片预览（自动生成）" class="form-input" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 10px;">
+            <!--添加 / 编辑商品表单-- >
+    <div id="modal-overlay" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000;">
+        <div class="modal" style="background-color: white; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="modal-title" style="margin: 0; color: #333;">添加商品</h2>
+                <button class="close-btn" id="close-modal-btn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="product-form">
+                    <input type="hidden" id="product-id">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-name" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品名称</label>
+                            <input type="text" id="product-name" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-description" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品描述</label>
+                            <textarea id="product-description" rows="3" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;"></textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品价格</label>
+                            <input type="number" id="product-price" step="0.01" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-original-price" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">划线价格（原价）</label>
+                            <input type="number" id="product-original-price" step="0.01" min="0" class="form-input" placeholder="用于显示折扣信息，留空则不显示" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-category" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品分类</label>
+                            <select id="product-category" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                                <option value="">加载中...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-stock" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">库存数量</label>
+                            <input type="number" id="product-stock" min="0" required class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="product-img" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">商品图片</label>
+                            <input type="text" id="product-img" placeholder="图片预览（自动生成）" class="form-input" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 10px;">
                                 <input type="file" id="product-img-file" accept="image/*" style="margin-top: 10px;">
-                                <small style="color: #666; display: block; margin-top: 5px;">支持JPG、PNG等格式图片上传</small>
-                            </div>
-                            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                                <button type="button" class="btn btn-secondary" id="cancel-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer;">取消</button>
-                                <button type="submit" class="btn btn-primary" id="submit-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer;">添加</button>
-                            </div>
-                        </form>
+                                    <small style="color: #666; display: block; margin-top: 5px;">支持JPG、PNG等格式图片上传</small>
+                                </div>
+                                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                    <button type="button" class="btn btn-secondary" id="cancel-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer;">取消</button>
+                                    <button type="submit" class="btn btn-primary" id="submit-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer;">添加</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
             </div>
 
             <!-- 错误提示 -->
@@ -2520,38 +2521,38 @@ function showAdminPanel () {
     }
 }
 
-// 隐藏管理面板
-function hideAdminPanel () {
-    console.log('Hiding admin panel');
+        // 隐藏管理面板
+        function hideAdminPanel () {
+            console.log('Hiding admin panel');
 
-    // 显示首页内容，隐藏管理面板
-    const heroArea = document.querySelector('.hero_area');
-    if (heroArea) {
-        heroArea.style.display = 'block';
+        // 显示首页内容，隐藏管理面板
+        const heroArea = document.querySelector('.hero_area');
+        if (heroArea) {
+            heroArea.style.display = 'block';
     }
 
-    const bg = document.querySelector('.bg');
-    if (bg) {
-        bg.style.display = 'block';
+        const bg = document.querySelector('.bg');
+        if (bg) {
+            bg.style.display = 'block';
     }
 
-    const contactSection = document.querySelector('.contact_section');
-    if (contactSection) {
-        contactSection.style.display = 'block';
+        const contactSection = document.querySelector('.contact_section');
+        if (contactSection) {
+            contactSection.style.display = 'block';
     }
 
-    const infoSection = document.querySelector('.info_section');
-    if (infoSection) {
-        infoSection.style.display = 'block';
+        const infoSection = document.querySelector('.info_section');
+        if (infoSection) {
+            infoSection.style.display = 'block';
     }
 
-    const footerSection = document.querySelector('.footer_section');
-    if (footerSection) {
-        footerSection.style.display = 'block';
+        const footerSection = document.querySelector('.footer_section');
+        if (footerSection) {
+            footerSection.style.display = 'block';
     }
 
-    if (adminPanel) {
-        adminPanel.style.display = 'none';
+        if (adminPanel) {
+            adminPanel.style.display = 'none';
     }
 }
 
