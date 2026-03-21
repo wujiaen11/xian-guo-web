@@ -1,0 +1,91 @@
+@charset "utf-8";
+/* CSS Document */
+
+
+/*		bg img postion*/
+
+
+/*logo style*/
+
+
+/*		show frame*/
+#container_demo{
+	
+	box-shadow:5px 5px 20px grey;
+/*			border:1px solid black;*/
+}
+
+#logRight .form,h2{
+
+	color:#424a5d;
+}
+
+
+.form input{
+	border:1px solid black;
+	border-radius:5px;
+	background:#e8f0fe;
+}
+.form .login{
+	font-size:18px;
+	color:white;
+	border:none;
+	background:#fe7300;
+}
+/*		input hover style*/
+.form input:hover{
+	box-shadow:2px 2px 3px grey;
+}
+
+/*		top font style*/
+.navs,.forget{
+   text-decoration: none;
+   color: #4d7cad;
+   font: 0.875em/1.5em"微软雅黑", "PTSans", "Arial", sans-serif;
+   font-size: 14px;
+}
+
+.form .forget{
+	text-align: center;
+}
+
+/*		start LogRight hover*/
+a:hover{
+	color:#48566b;
+}
+
+#otherLog ,#otherShow{
+	text-align: center;
+	color:grey;
+}
+
+/*		end LogRight hover*/
+/*		end left style*/
+#logLeft{
+	color:white;
+	background:url("../images/img/logleft.jpg");
+}
+#logLeft p {
+	font-size:14px;
+	text-indent: 2em;
+	letter-spacing: 1px;
+}
+#logLeft h4{
+	font-family:Hybrid;
+	font-weight: 100;
+}
+#logLeft h1{
+	font-family:showTitle;
+
+}
+#otherShow{
+
+	color:white;
+}
+/*		end left style*/
+/*		info section style*/
+.session__footer{
+	text-align:center;
+}
+
+

@@ -1,0 +1,69 @@
+@charset "utf-8";
+/* CSS Document */
+
+/*二级导航*/
+		.navs2{
+			list-style:none;
+			position:absolute;
+		}
+		.width1{
+			width:105.63px;
+			top:60.5px;
+			left:484px;
+		}
+		.width2{
+			width:112.63px;
+			top:60.5px;
+			left:589.63px;
+		}
+		.width3{
+			width:173.46px;
+			top:60.5px;
+			left:702.09px;
+		}
+		.width4{
+			width:161.09px;
+			top:60.5px;
+			left:875.9px;
+		}
+		.width5{
+			width:111.4px;
+			top:60.5px;
+			left:1037px;
+			
+		}
+		.navs2 .navtwo{
+			list-style:none;
+			width:100%;
+			height:60px;
+			padding:0px;
+			opacity:0;
+			z-index:-1;
+			/*display:none;*/
+		}
+		.navs2 .navtwo li{
+			width:100%;
+			height:30px;
+			line-height:30px;
+			text-align:center;
+			margin-top:0px;
+			background-color:rgba(0,0,0,0.3);
+		}
+		.navs2 .navtwo li:hover{
+			width:100%;
+			height:30px;
+			background-color:rgba(0,0,0,0.4);
+			transition:all 1s ease;
+			
+		}
+		.navs2 .navtwo li a{
+			font-size:8px;
+			color:#fff;
+			background-color:rgba(0,0,0,0);
+		}
+		.navbar-nav .nav-item:hover .navs2 .navtwo{
+			opacity:1;
+			/*display:block;*/
+			z-index:1;
+			transition:all 1s ease 0.1s;
+        }
