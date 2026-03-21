@@ -20,9 +20,17 @@
     {
       "src": "fonts/**/*",
       "use": "@vercel/static"
+    },
+    {
+      "src": "app.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
     {
       "src": "/(.*)",
       "dest": "/$1"
