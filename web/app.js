@@ -19,10 +19,18 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
         ? window.ENV.API_BASE_URL
         : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
 
-// 模拟管理员账号
+// 从环境变量获取管理员账号，支持微信云托管
 const ADMIN_CREDENTIALS = {
-    username: 'admin',
-    password: 'admin123'
+    username: (typeof process !== 'undefined' && process.env && process.env.ADMIN_USERNAME)
+        ? process.env.ADMIN_USERNAME
+        : (window.ENV && window.ENV.ADMIN_USERNAME)
+            ? window.ENV.ADMIN_USERNAME
+            : 'admin',
+    password: (typeof process !== 'undefined' && process.env && process.env.ADMIN_PASSWORD)
+        ? process.env.ADMIN_PASSWORD
+        : (window.ENV && window.ENV.ADMIN_PASSWORD)
+            ? window.ENV.ADMIN_PASSWORD
+            : 'admin123'
 };
 
 // DOM元素
@@ -1564,8 +1572,8 @@ async function handleLogin (e) {
         updateNavbarUserInfo(username);
 
         // 加载管理系统内容
-        await loadInitialData();
         showAdminPanel();
+        await loadInitialData();
         showError('登录成功', 'success');
         closeLoginModalFunc();
     } else {
