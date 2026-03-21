@@ -359,18 +359,10 @@ function handleTabChange (e) {
     // 更新标签页按钮状态
     tabBtns.forEach(btn => {
         btn.classList.remove('active');
-        // 同时更新父元素的active类
-        const navItem = btn.closest('.nav-item');
-        if (navItem) {
-            navItem.classList.remove('active');
-        }
+        btn.style.background = 'rgba(0, 0, 0, 0.1)';
     });
     e.target.classList.add('active');
-    // 同时更新父元素的active类
-    const activeNavItem = e.target.closest('.nav-item');
-    if (activeNavItem) {
-        activeNavItem.classList.add('active');
-    }
+    e.target.style.background = 'rgba(0, 0, 0, 0.3)';
 
     // 切换页面内容
     if (tabName === 'products') {
@@ -2193,40 +2185,15 @@ function showAdminPanel () {
         adminPanel.style.display = 'block';
         adminPanel.innerHTML = `
         <div id="app">
-            <header class="header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <header class="header" style="background-color: #b5caee; color: #191919; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <h1 style="margin: 0; font-size: 24px; font-weight: 600;">商品管理系统</h1>
-                <div style="display: flex; align-items: center;">
-                    <ul class="navbar-nav" style="display: flex; list-style: none; margin: 0; padding: 0; gap: 10px;">
-                        <li class="nav-item active" style="background-color: rgba(0, 0, 0, 0.3); transition: all 1s ease;">
-                            <button class="tab-btn active anav" data-tab="products" style="background: none; color: white; border: none; padding: 8px 16px; cursor: pointer; transition: all 1s ease;">商品管理</button>
-                        </li>
-                        <li class="nav-item" style="background-color: rgba(0, 0, 0, 0.1); transition: all 1s ease;">
-                            <button class="tab-btn anav" data-tab="orders" style="background: none; color: white; border: none; padding: 8px 16px; cursor: pointer; transition: all 1s ease;">订单管理</button>
-                        </li>
-                        <li class="nav-item" style="background-color: rgba(0, 0, 0, 0.1); transition: all 1s ease;">
-                            <button class="tab-btn anav" data-tab="analytics" style="background: none; color: white; border: none; padding: 8px 16px; cursor: pointer; transition: all 1s ease;">数据分析</button>
-                        </li>
-                        <li class="nav-item" style="background-color: rgba(0, 0, 0, 0.1); transition: all 1s ease;">
-                            <button class="tab-btn anav" onclick="logout()" style="background: none; color: white; border: none; padding: 8px 16px; cursor: pointer; transition: all 1s ease;">退出登录</button>
-                        </li>
-                    </ul>
+                <div class="header-tabs" style="display: flex; gap: 10px;">
+                    <button class="tab-btn active" data-tab="products" style="background: rgba(0, 0, 0, 0.3); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">商品管理</button>
+                    <button class="tab-btn" data-tab="orders" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">订单管理</button>
+                    <button class="tab-btn" data-tab="analytics" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">数据分析</button>
+                    <button class="tab-btn" onclick="logout()" style="background: rgba(0, 0, 0, 0.1); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 1s ease;">退出登录</button>
                 </div>
             </header>
-            <style type="text/css">
-                /*main page nav show hover*/
-                .nav-item:hover .anav {
-                    background-color: rgba(0, 0, 0, 0.3);
-                    transition: all 1s ease;
-                }
-                
-                .nav-item:not(:hover) {
-                    background-color: rgba(0, 0, 0, 0.1);
-                }
-                
-                .nav-item.active {
-                    background-color: rgba(0, 0, 0, 0.3);
-                }
-            </style>
 
             <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
                 <button class="btn btn-primary" id="add-product-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">添加商品</button>
