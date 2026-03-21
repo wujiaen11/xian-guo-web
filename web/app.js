@@ -58,7 +58,6 @@ let importDataBtn;
 let fileInput;
 let errorMessage;
 let errorText;
-let closeErrorBtn;
 let emptyAddBtn;
 // 登录相关DOM元素
 let loginForm;
@@ -69,7 +68,6 @@ let adminPanel;
 let tabBtns;
 let productsActions;
 let ordersActions;
-let analyticsActions;
 let productsPage;
 let ordersPage;
 let analyticsPage;
@@ -78,7 +76,6 @@ let orderStatusFilter;
 let orderListBody;
 let ordersEmptyState;
 // 数据分析相关DOM元素
-let analyticsOverview;
 let totalProducts;
 let totalOrders;
 let totalSales;
@@ -205,7 +202,6 @@ function getDOMElements () {
     fileInput = document.getElementById('file-input');
     errorMessage = document.getElementById('error-message');
     errorText = document.getElementById('error-text');
-    closeErrorBtn = document.getElementById('close-error-btn');
     emptyAddBtn = document.getElementById('empty-add-btn');
 
     // 订单相关元素
