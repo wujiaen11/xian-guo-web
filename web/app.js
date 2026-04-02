@@ -2551,3 +2551,59 @@ function hideAdminPanel () {
     }
 }
 
+// 网站浏览量统计功能
+function updateVisitCount() {
+    try {
+        let count = parseInt(localStorage.getItem('visitCount') || '0');
+        count += 1;
+        localStorage.setItem('visitCount', count.toString());
+        
+        const countElement = document.getElementById('count-number');
+        if (countElement) {
+            countElement.textContent = count.toLocaleString();
+        }
+    } catch (error) {
+        console.warn('localStorage访问受限，使用会话存储:', error);
+        try {
+            let count = parseInt(sessionStorage.getItem('visitCount') || '0');
+            count += 1;
+            sessionStorage.setItem('visitCount', count.toString());
+            
+            const countElement = document.getElementById('count-number');
+            if (countElement) {
+                countElement.textContent = count.toLocaleString();
+            }
+        } catch (sessionError) {
+            console.warn('会话存储也受限:', sessionError);
+        }
+    }
+}
+
+// 显示当前浏览量
+function displayVisitCount() {
+    try {
+        let count = parseInt(localStorage.getItem('visitCount') || '0');
+        const countElement = document.getElementById('count-number');
+        if (countElement) {
+            countElement.textContent = count.toLocaleString();
+        }
+    } catch (error) {
+        console.warn('localStorage访问受限，使用会话存储:', error);
+        try {
+            let count = parseInt(sessionStorage.getItem('visitCount') || '0');
+            const countElement = document.getElementById('count-number');
+            if (countElement) {
+                countElement.textContent = count.toLocaleString();
+            }
+        } catch (sessionError) {
+            console.warn('会话存储也受限:', sessionError);
+        }
+    }
+}
+
+// 在DOM加载完成后初始化浏览量统计
+document.addEventListener('DOMContentLoaded', () => {
+    displayVisitCount();
+    updateVisitCount();
+});
+
