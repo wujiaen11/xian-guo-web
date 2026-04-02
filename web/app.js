@@ -2551,59 +2551,75 @@ function hideAdminPanel () {
     }
 }
 
-// 网站浏览量统计功能
-function updateVisitCount() {
+// 网站浏览量统计
+async function updateVisitCount () {
     try {
-        let count = parseInt(localStorage.getItem('visitCount') || '0');
-        count += 1;
-        localStorage.setItem('visitCount', count.toString());
-        
-        const countElement = document.getElementById('count-number');
-        if (countElement) {
-            countElement.textContent = count.toLocaleString();
+        const response = await fetch(`${API_BASE_URL}/visit-count/increment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const countElement = document.getElementById('count-number');
+            if (countElement) {
+                countElement.textContent = data.count.toLocaleString();
+            }
+        } else {
+            throw new Error('API请求失败');
         }
     } catch (error) {
-        console.warn('localStorage访问受限，使用会话存储:', error);
+        console.warn('后端API访问失败，降级使用本地存储:', error);
+        // 降级方案：使用localStorage
         try {
-            let count = parseInt(sessionStorage.getItem('visitCount') || '0');
+            let count = parseInt(localStorage.getItem('visitCount') || '0');
             count += 1;
-            sessionStorage.setItem('visitCount', count.toString());
-            
+            localStorage.setItem('visitCount', count.toString());
+
             const countElement = document.getElementById('count-number');
             if (countElement) {
                 countElement.textContent = count.toLocaleString();
             }
-        } catch (sessionError) {
-            console.warn('会话存储也受限:', sessionError);
+        } catch (storageError) {
+            console.warn('本地存储也失败:', storageError);
         }
     }
 }
 
 // 显示当前浏览量
-function displayVisitCount() {
+async function displayVisitCount () {
     try {
-        let count = parseInt(localStorage.getItem('visitCount') || '0');
-        const countElement = document.getElementById('count-number');
-        if (countElement) {
-            countElement.textContent = count.toLocaleString();
+        const response = await fetch(`${API_BASE_URL}/visit-count`);
+
+        if (response.ok) {
+            const data = await response.json();
+            const countElement = document.getElementById('count-number');
+            if (countElement) {
+                countElement.textContent = data.count.toLocaleString();
+            }
+        } else {
+            throw new Error('API请求失败');
         }
     } catch (error) {
-        console.warn('localStorage访问受限，使用会话存储:', error);
+        console.warn('后端API访问失败，降级使用本地存储:', error);
+        // 降级方案：使用localStorage
         try {
-            let count = parseInt(sessionStorage.getItem('visitCount') || '0');
+            let count = parseInt(localStorage.getItem('visitCount') || '0');
             const countElement = document.getElementById('count-number');
             if (countElement) {
                 countElement.textContent = count.toLocaleString();
             }
-        } catch (sessionError) {
-            console.warn('会话存储也受限:', sessionError);
+        } catch (storageError) {
+            console.warn('本地存储也失败:', storageError);
         }
     }
 }
 
 // 在DOM加载完成后初始化浏览量统计
-document.addEventListener('DOMContentLoaded', () => {
-    displayVisitCount();
-    updateVisitCount();
+document.addEventListener('DOMContentLoaded', async () => {
+    await displayVisitCount();
+    await updateVisitCount();
 });
 
