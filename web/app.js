@@ -66,8 +66,7 @@ let passwordInput;
 let adminPanel;
 // 订单相关DOM元素
 let tabBtns;
-let productsActions;
-let ordersActions;
+
 let productsPage;
 let ordersPage;
 let analyticsPage;
@@ -204,8 +203,7 @@ function getDOMElements () {
 
     // 订单相关元素
     tabBtns = document.querySelectorAll('.tab-btn');
-    productsActions = document.getElementById('products-actions');
-    ordersActions = document.getElementById('orders-actions');
+
     productsPage = document.getElementById('products-page');
     ordersPage = document.getElementById('orders-page');
     analyticsPage = document.getElementById('analytics-page');
@@ -357,24 +355,18 @@ function handleTabChange (e) {
 
     // 切换页面内容
     if (tabName === 'products') {
-        productsActions.style.display = 'flex';
-        ordersActions.style.display = 'none';
         productsPage.style.display = 'block';
         ordersPage.style.display = 'none';
         analyticsPage.style.display = 'none';
         // 重新加载商品数据
         loadProducts();
     } else if (tabName === 'orders') {
-        productsActions.style.display = 'none';
-        ordersActions.style.display = 'flex';
         productsPage.style.display = 'none';
         ordersPage.style.display = 'block';
         analyticsPage.style.display = 'none';
         // 加载订单数据
         loadOrders();
     } else if (tabName === 'analytics') {
-        productsActions.style.display = 'none';
-        ordersActions.style.display = 'none';
         productsPage.style.display = 'none';
         ordersPage.style.display = 'none';
         analyticsPage.style.display = 'block';
@@ -2157,17 +2149,6 @@ function showAdminPanel () {
                         font-size: 14px;
                     }
                     
-                    .header-actions {
-                        padding: 15px !important;
-                        flex-wrap: wrap;
-                    }
-                    
-                    .header-actions button {
-                        flex: 1;
-                        min-width: 120px;
-                        margin-bottom: 10px;
-                    }
-                    
                     .main {
                         padding: 15px !important;
                     }
@@ -2222,14 +2203,7 @@ function showAdminPanel () {
                 </div>
             </header>
 
-            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; width: 100%;">
-            </div>
-
-            <div class="header-actions" id="orders-actions" style="display: none; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; width: 100%;">
-                <!-- 订单管理相关操作按钮 -->
-            </div>
-
-            <main class="main" style="padding: 20px; width: 100%; height: calc(100vh - 160px); overflow-y: auto;">
+            <main class="main" style="padding: 20px; width: 100%; height: calc(100vh - 120px); overflow-y: auto;">
                 <!-- 商品管理页面 -->
                 <div id="products-page" class="page-content" style="display: block; width: 100%;">
                     <!-- 搜索和过滤 -->
