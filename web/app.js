@@ -648,7 +648,7 @@ function renderProductList (filteredProducts = null) {
     productListBody.innerHTML = displayProducts.map(product => `
         <tr>
             <td>${product.id}</td>
-    <td>${product.img ? `<img src="${product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect width=\'80\' height=\'80\' fill=\'#f0f0f0\'/><text x=\'40\' y=\'45\' text-anchor=\'middle\' fill=\'#999\' font-size=\'12\'>图片加载失败</text></svg>';">` : '-'}</td>
+    <td>${product.img ? `<img src="${product.img.startsWith('http') || product.img.startsWith('data:') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect width=\'80\' height=\'80\' fill=\'#f0f0f0\'/><text x=\'40\' y=\'45\' text-anchor=\'middle\' fill=\'#999\' font-size=\'12\'>图片加载失败</text></svg>';">` : '-'}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
             <td>¥${parseFloat(product.price).toFixed(2)}</td>
