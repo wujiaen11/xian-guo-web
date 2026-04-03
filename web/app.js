@@ -197,9 +197,7 @@ function getDOMElements () {
     productListBody = document.getElementById('product-list-body');
     productsEmptyState = document.getElementById('products-empty-state');
     productsLoading = document.getElementById('products-loading');
-    exportDataBtn = document.getElementById('export-data-btn');
-    importDataBtn = document.getElementById('import-data-btn');
-    fileInput = document.getElementById('file-input');
+
     errorMessage = document.getElementById('error-message');
     errorText = document.getElementById('error-text');
     emptyAddBtn = document.getElementById('empty-add-btn');
@@ -308,18 +306,7 @@ function bindEvents () {
         searchInput.addEventListener('input', handleSearch);
     }
 
-    // 数据导入导出事件
-    if (exportDataBtn) {
-        exportDataBtn.addEventListener('click', exportData);
-    }
 
-    if (importDataBtn) {
-        importDataBtn.addEventListener('click', () => fileInput.click());
-    }
-
-    if (fileInput) {
-        fileInput.addEventListener('change', importData);
-    }
 
 
 
@@ -1005,70 +992,7 @@ function handleImageUpload (e) {
     }
 }
 
-// 导出数据
-async function exportData () {
-    try {
-        const response = await fetch(`${API_BASE_URL}/products`);
-        if (!response.ok) {
-            throw new Error('Failed to load products');
-        }
 
-        const products = await response.json();
-        const jsonData = JSON.stringify(products, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'products_' + new Date().toISOString().slice(0, 10) + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showError('数据导出成功', 'success');
-    } catch (error) {
-        console.error('Error exporting data:', error);
-        showError('导出失败: ' + error.message);
-    }
-}
-
-// 导入数据
-async function importData (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (confirm('确定要导入数据吗？这将覆盖现有数据。')) {
-                // 由于涉及大量数据操作，建议在后端实现批量导入功能
-                // 这里简单实现单个导入
-                for (const product of data) {
-                    const formData = new FormData();
-                    formData.append('name', product.name);
-                    formData.append('description', product.description);
-                    formData.append('price', product.price);
-                    formData.append('stock', product.stock);
-                    formData.append('img', product.img);
-
-                    await fetch(`${API_BASE_URL}/products`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                }
-
-                // 重新加载商品数据
-                await loadProducts();
-                showError('数据导入成功', 'success');
-                fileInput.value = '';
-            }
-        } catch (error) {
-            console.error('Error importing data:', error);
-            showError('导入失败: ' + error.message);
-        }
-    };
-    reader.readAsText(file);
-}
 
 // 显示错误信息
 function showError (message, type = 'error') {
@@ -2298,11 +2222,7 @@ function showAdminPanel () {
                 </div>
             </header>
 
-            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px; width: 100%;">
-                <button class="btn btn-primary" id="add-product-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">添加商品</button>
-                <button class="btn btn-secondary" id="export-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导出数据</button>
-                <input type="file" id="file-input" accept=".json" style="display: none;">
-                <button class="btn btn-secondary" id="import-data-btn" style="padding: 8px 16px; background: #6c757d; border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">导入数据</button>
+            <div class="header-actions" id="products-actions" style="display: block; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; width: 100%;">
             </div>
 
             <div class="header-actions" id="orders-actions" style="display: none; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; width: 100%;">
@@ -2313,7 +2233,8 @@ function showAdminPanel () {
                 <!-- 商品管理页面 -->
                 <div id="products-page" class="page-content" style="display: block; width: 100%;">
                     <!-- 搜索和过滤 -->
-                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px; width: 100%;">
+                    <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px; width: 100%; align-items: center;">
+                        <button class="btn btn-primary" id="add-product-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 4px; color: white; cursor: pointer; transition: all 0.3s ease;">添加商品</button>
                         <input type="text" id="search-input" placeholder="搜索商品名称" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1; width: 100%;">
                     </div>
 
@@ -2571,20 +2492,7 @@ async function updateVisitCount () {
             throw new Error('API请求失败');
         }
     } catch (error) {
-        console.warn('后端API访问失败，降级使用本地存储:', error);
-        // 降级方案：使用localStorage
-        try {
-            let count = parseInt(localStorage.getItem('visitCount') || '0');
-            count += 1;
-            localStorage.setItem('visitCount', count.toString());
-
-            const countElement = document.getElementById('count-number');
-            if (countElement) {
-                countElement.textContent = count.toLocaleString();
-            }
-        } catch (storageError) {
-            console.warn('本地存储也失败:', storageError);
-        }
+        console.warn('后端API访问失败:', error);
     }
 }
 
@@ -2603,17 +2511,7 @@ async function displayVisitCount () {
             throw new Error('API请求失败');
         }
     } catch (error) {
-        console.warn('后端API访问失败，降级使用本地存储:', error);
-        // 降级方案：使用localStorage
-        try {
-            let count = parseInt(localStorage.getItem('visitCount') || '0');
-            const countElement = document.getElementById('count-number');
-            if (countElement) {
-                countElement.textContent = count.toLocaleString();
-            }
-        } catch (storageError) {
-            console.warn('本地存储也失败:', storageError);
-        }
+        console.warn('后端API访问失败:', error);
     }
 }
 
