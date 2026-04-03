@@ -648,7 +648,7 @@ function renderProductList (filteredProducts = null) {
     productListBody.innerHTML = displayProducts.map(product => `
         <tr>
             <td>${product.id}</td>
-    <td>${product.img ? `<img src="${product.img.startsWith('http') || product.img.startsWith('data:') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'><rect width=\'80\' height=\'80\' fill=\'#f0f0f0\'/><text x=\'40\' y=\'45\' text-anchor=\'middle\' fill=\'#999\' font-size=\'12\'>图片加载失败</text></svg>';">` : '-'}</td>
+    <td>${product.img ? `<img src="${product.img.startsWith('http') || product.img.startsWith('data:') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;><rect width=&quot;80&quot; height=&quot;80&quot; fill=&quot;#f0f0f0&quot;/></svg>');">` : '-'}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
             <td>¥${parseFloat(product.price).toFixed(2)}</td>
@@ -975,12 +975,9 @@ function handleOrderFilter () {
 function handleImageUpload (e) {
     const file = e.target.files[0];
     if (file) {
-        // 预览图片
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            productImgInput.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        // 不设置base64到input，避免发送过长数据到服务器
+        // 预览可以在其他地方实现，但我们这里直接保留文件上传方式
+        console.log('Image file selected for upload:', file.name);
     }
 }
 
