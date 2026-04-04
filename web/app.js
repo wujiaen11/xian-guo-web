@@ -2079,9 +2079,17 @@ function renderHomePageProducts () {
         return;
     }
 
-    productList.innerHTML = products.map((product, index) => `
+    productList.innerHTML = products.map((product, index) => {
+        let imgSrc = product.img;
+        if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
+            imgSrc = API_BASE_URL.replace('/api', '') + imgSrc;
+        }
+        if (!imgSrc) {
+            imgSrc = 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>';
+        }
+        return `
         <div class="brand_item-box">
-            <div class="brand_img-box item-${index + 1}" style="background-image: url(${product.img ? (product.img.startsWith('http') ? product.img : API_BASE_URL.replace('/api', '') + product.img) : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>'}">
+            <div class="brand_img-box item-${index + 1}" style="background-image: url(${imgSrc})">
                 <a href="#" title="查看更多">查看更多</a>
             </div>
             <div class="brand_detail-box">
@@ -2089,7 +2097,8 @@ function renderHomePageProducts () {
                 <p>${product.name}</p>
             </div>
         </div>
-        `).join('');
+        `;
+    }).join('');
 }
 
 // 显示管理面板
