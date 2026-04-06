@@ -409,8 +409,8 @@ async function loadProducts () {
         return true;
     } catch (error) {
         console.error('Error loading products:', error);
-        // 不直接显示错误，使用模拟数据作为fallback
-        loadMockProducts();
+        // 不直接显示错误，使用空数据作为fallback
+        loadEmptyProducts();
         return false;
     } finally {
         // 隐藏加载状态
@@ -442,18 +442,18 @@ async function loadOrders () {
         }
         orders = await response.json();
         console.log('Orders loaded successfully:', orders);
-        // 如果API返回空数组，也加载模拟数据
+        // 如果API返回空数组，也加载空数据
         if (orders.length === 0) {
-            console.log('API returned empty orders array, loading mock orders...');
-            loadMockOrders();
+            console.log('API returned empty orders array, loading empty orders...');
+            loadEmptyOrders();
         } else {
             renderOrderList();
         }
         return true;
     } catch (error) {
         console.error('Error loading orders:', error);
-        // 不直接显示错误，使用模拟数据作为fallback
-        loadMockOrders();
+        // 不直接显示错误，使用空数据作为fallback
+        loadEmptyOrders();
         return false;
     } finally {
         // 隐藏加载状态
@@ -463,83 +463,9 @@ async function loadOrders () {
     }
 }
 
-// 加载模拟订单数据（作为fallback）
-function loadMockOrders () {
-    console.log('Loading mock orders...');
-    orders = [
-        {
-            id: '1',
-            user_id: 'user123',
-            total_price: 13.6,
-            status: 2,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 86400000,
-            products: [
-                { name: '500g±50g/份 高山无籽蜜桔', quantity: 1, price: 3.9 },
-                { name: '500g±50g/袋 海南香蕉', quantity: 3, price: 2.9 }
-            ]
-        },
-        {
-            id: '2',
-            user_id: 'user123',
-            total_price: 13.89,
-            status: 1,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 43200000,
-            products: [
-                { name: '250g~375g/个 黄金葡萄柚', quantity: 1, price: 3.9 },
-                { name: '500g±50g/盒 云南红提', quantity: 1, price: 3.99 }
-            ]
-        },
-        {
-            id: '3',
-            user_id: 'user456',
-            total_price: 13.38,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院7栋203',
-            created_at: Date.now() - 172800000,
-            products: [
-                { name: '2斤±0.2斤/份 正宗砀山梨', quantity: 1, price: 3.99 },
-                { name: '500g±50g/份 陕西猕猴桃', quantity: 1, price: 3.39 }
-            ]
-        },
-        {
-            id: '4',
-            user_id: 'user789',
-            total_price: 13.89,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院9栋101',
-            created_at: Date.now() - 259200000,
-            products: [
-                { name: '250g~375g/个 黄金葡萄柚', quantity: 1, price: 3.9 },
-                { name: '500g±50g/盒 云南红提', quantity: 1, price: 3.99 }
-            ]
-        },
-        {
-            id: '5',
-            user_id: 'user123',
-            total_price: 13.6,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 345600000,
-            products: [
-                { name: '500g±50g/份 高山无籽蜜桔', quantity: 1, price: 3.9 },
-                { name: '500g±50g/袋 海南香蕉', quantity: 3, price: 2.9 }
-            ]
-        },
-        {
-            id: '6',
-            user_id: 'user456',
-            total_price: 13.38,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院7栋203',
-            created_at: Date.now() - 432000000,
-            products: [
-                { name: '2斤±0.2斤/份 正宗砀山梨', quantity: 1, price: 3.99 },
-                { name: '500g±50g/份 陕西猕猴桃', quantity: 1, price: 3.39 }
-            ]
-        }
-    ];
+function loadEmptyOrders () {
+    console.log('Loading empty orders...');
+    orders = [];
     renderOrderList();
 }
 
@@ -589,37 +515,10 @@ function renderCategoryOptions () {
     productCategoryInput.innerHTML = `<option value="">请选择分类</option>${options}`;
 }
 
-// 加载模拟数据（作为fallback）
-function loadMockProducts () {
-    console.log('Loading mock products...');
-    products = [
-        {
-            id: '1',
-            name: '500g±50g/份【酸甜多汁】高山无籽蜜桔',
-            description: '富含维C',
-            price: 3.9,
-            stock: 100,
-            img: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg.alicdn.com%2Fi2%2F2627785630%2FO1CN01lcFjrQ1rSaXqyoj56_%21%212627785630.jpg&refer=http%3A%2F%2Fimg.alicdn.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1701185157&t=01ad96d19c2d890a50e34ea6795390c6',
-            createdAt: Date.now() - 86400000,
-            updatedAt: Date.now() - 86400000
-        },
-        {
-            id: '2',
-            name: '500g±50g/袋【软糯香甜】超甜海南香蕉',
-            description: '皮薄肉厚水果熟食纤维细腻',
-            price: 2.9,
-            stock: 150,
-            img: 'https://img1.baidu.com/it/u=520702331,1822653794&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            createdAt: Date.now() - 43200000,
-            updatedAt: Date.now() - 43200000
-        }
-    ];
-    // 按照创建时间倒序排序，新添加的商品显示在最顶部
-    products.sort((a, b) => {
-        const dateA = new Date(a.created_at || a.createdAt).getTime();
-        const dateB = new Date(b.created_at || b.createdAt).getTime();
-        return dateB - dateA;
-    });
+// 加载空数据（作为fallback）
+function loadEmptyProducts () {
+    console.log('Loading empty products...');
+    products = [];
     renderProductList();
 }
 
@@ -1026,9 +925,9 @@ async function loadAnalyticsData () {
     try {
         // 检查是否在本地服务器环境
         if (window.location.protocol === 'file:') {
-            console.warn('Running in file:// protocol, using mock data directly');
-            // 直接使用模拟数据
-            generateMockAnalyticsData();
+            console.warn('Running in file:// protocol, using empty data directly');
+            // 直接使用空数据
+            generateEmptyAnalyticsData();
         } else {
             // 为每个请求添加超时控制
             const controller1 = new AbortController();
@@ -1059,8 +958,8 @@ async function loadAnalyticsData () {
         }
     } catch (error) {
         console.error('Error loading analytics data:', error);
-        // 使用模拟数据作为 fallback
-        generateMockAnalyticsData();
+        // 使用空数据作为 fallback
+        generateEmptyAnalyticsData();
     } finally {
         // 无论成功还是失败，都要重置标志位
         isLoadingAnalyticsData = false;
@@ -1107,9 +1006,8 @@ function calculateAnalyticsMetrics (products, orders) {
     // 3. 生成商品销售数据
     const productSalesData = products.map(product => {
         // 这里简化处理，实际应该从订单项中统计销量
-        // 生成模拟销售数据
-        const salesCount = Math.floor(Math.random() * 50) + 1;
-        const salesAmount = salesCount * parseFloat(product.price);
+        const salesCount = 0;
+        const salesAmount = 0;
         return {
             id: product.id,
             name: product.name,
@@ -1398,36 +1296,23 @@ function scrollToTableTop () {
     }
 }
 
-// 生成模拟数据分析数据（用于演示）
-function generateMockAnalyticsData () {
-    console.log('Generating mock analytics data...');
+// 生成空数据分析数据（用于演示）
+function generateEmptyAnalyticsData () {
+    console.log('Generating empty analytics data...');
 
-    // 模拟商品数据
-    const mockProducts = [
-        { id: '1', name: '商品A', price: '100.00' },
-        { id: '2', name: '商品B', price: '200.00' },
-        { id: '3', name: '商品C', price: '150.00' },
-        { id: '4', name: '商品D', price: '300.00' },
-        { id: '5', name: '商品E', price: '250.00' }
-    ];
+    // 使用空数组
+    const emptyProducts = [];
+    const emptyOrders = [];
 
-    // 模拟订单数据
-    const mockOrders = Array.from({ length: 50 }, (_, i) => ({
-        id: `order-${i + 1}`,
-        status: 3, // 已完成
-        total_price: (Math.random() * 1000 + 100).toFixed(2),
-        created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-    }));
-
-    // 重新获取DOM元素，确保在使用模拟数据时能正确获取
+    // 重新获取DOM元素，确保在使用空数据时能正确获取
     refreshAnalyticsDOM();
 
     // 检查DOM元素是否存在，只有存在时才渲染数据
     if (salesDataBody) {
-        // 使用模拟数据计算指标
-        calculateAnalyticsMetrics(mockProducts, mockOrders);
+        // 使用空数据计算指标
+        calculateAnalyticsMetrics(emptyProducts, emptyOrders);
     } else {
-        console.warn('salesDataBody not found, skipping mock analytics data generation');
+        console.warn('salesDataBody not found, skipping empty analytics data generation');
     }
 }
 
@@ -2016,56 +1901,8 @@ async function loadHomePageProducts () {
         renderHomePageProducts();
     } catch (error) {
         console.error('Error loading home page products:', error);
-        // 不直接显示错误，使用模拟数据作为fallback
-        // 直接设置模拟数据，不调用loadMockProducts()，避免调用renderProductList()
-        products = [
-            {
-                id: '1',
-                name: '500g±50g/份【酸甜多汁】高山无籽蜜桔',
-                description: '富含维C',
-                price: 3.9,
-                stock: 100,
-                img: 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg.alicdn.com%2Fi2%2F2627785630%2FO1CN01lcFjrQ1rSaXqyoj56_%21%212627785630.jpg&refer=http%3A%2F%2Fimg.alicdn.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1701185157&t=01ad96d19c2d890a50e34ea6795390c6',
-                createdAt: Date.now() - 86400000,
-                updatedAt: Date.now() - 86400000
-            },
-            {
-                id: '2',
-                name: '500g±50g/袋【软糯香甜】超甜海南香蕉',
-                description: '皮薄肉厚水果熟食纤维细腻',
-                price: 2.9,
-                stock: 150,
-                img: 'https://img1.baidu.com/it/u=520702331,1822653794&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-                createdAt: Date.now() - 43200000,
-                updatedAt: Date.now() - 43200000
-            },
-            {
-                id: '3',
-                name: '500g±50g/份【清脆爽口】红富士苹果',
-                description: '脆甜多汁，营养丰富',
-                price: 4.5,
-                stock: 120,
-                img: 'https://img2.baidu.com/it/u=3838584913,2826472502&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-                createdAt: Date.now() - 21600000,
-                updatedAt: Date.now() - 21600000
-            },
-            {
-                id: '4',
-                name: '500g±50g/串【香甜多汁】新疆葡萄',
-                description: '粒大饱满，甜度高',
-                price: 5.8,
-                stock: 80,
-                img: 'https://img1.baidu.com/it/u=2357699254,3864133814&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-                createdAt: Date.now() - 10800000,
-                updatedAt: Date.now() - 10800000
-            }
-        ];
-        // 按照创建时间倒序排序，新添加的商品显示在最顶部
-        products.sort((a, b) => {
-            const dateA = new Date(a.created_at || a.createdAt).getTime();
-            const dateB = new Date(b.created_at || b.createdAt).getTime();
-            return dateB - dateA;
-        });
+        // 不使用备用数据，显示空状态
+        products = [];
         renderHomePageProducts();
     }
 }
