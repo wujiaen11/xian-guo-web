@@ -337,99 +337,15 @@ async function loadOrders () {
         }
         orders = await response.json();
         console.log('API returned orders:', orders);
-        // 如果API返回空数组，也加载模拟数据
-        if (orders.length === 0) {
-            console.log('API returned empty orders array, loading mock orders...');
-            loadMockOrders();
-        } else {
-            renderOrderList();
-        }
+        // 无论API返回空数组还是有数据，都直接渲染
+        renderOrderList();
     } catch (error) {
         console.error('Error loading orders:', error);
         showError('加载订单失败: ' + error.message);
-        // 使用模拟数据作为fallback
-        loadMockOrders();
+        // 出错时使用空数据
+        orders = [];
+        renderOrderList();
     }
-}
-
-// 加载模拟订单数据（作为fallback）
-function loadMockOrders () {
-    console.log('Loading mock orders...');
-    orders = [
-        {
-            id: '1',
-            user_id: 'user123',
-            total_price: 13.6,
-            status: 2,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 86400000,
-            products: [
-                { name: '500g±50g/份 高山无籽蜜桔', quantity: 1, price: 3.9 },
-                { name: '500g±50g/袋 海南香蕉', quantity: 3, price: 2.9 }
-            ]
-        },
-        {
-            id: '2',
-            user_id: 'user123',
-            total_price: 13.89,
-            status: 1,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 43200000,
-            products: [
-                { name: '250g~375g/个 黄金葡萄柚', quantity: 1, price: 3.9 },
-                { name: '500g±50g/盒 云南红提', quantity: 1, price: 3.99 }
-            ]
-        },
-        {
-            id: '3',
-            user_id: 'user456',
-            total_price: 13.38,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院7栋203',
-            created_at: Date.now() - 172800000,
-            products: [
-                { name: '2斤±0.2斤/份 正宗砀山梨', quantity: 1, price: 3.99 },
-                { name: '500g±50g/份 陕西猕猴桃', quantity: 1, price: 3.39 }
-            ]
-        },
-        {
-            id: '4',
-            user_id: 'user789',
-            total_price: 13.89,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院9栋101',
-            created_at: Date.now() - 259200000,
-            products: [
-                { name: '250g~375g/个 黄金葡萄柚', quantity: 1, price: 3.9 },
-                { name: '500g±50g/盒 云南红提', quantity: 1, price: 3.99 }
-            ]
-        },
-        {
-            id: '5',
-            user_id: 'user123',
-            total_price: 13.6,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院8栋406',
-            created_at: Date.now() - 345600000,
-            products: [
-                { name: '500g±50g/份 高山无籽蜜桔', quantity: 1, price: 3.9 },
-                { name: '500g±50g/袋 海南香蕉', quantity: 3, price: 2.9 }
-            ]
-        },
-        {
-            id: '6',
-            user_id: 'user456',
-            total_price: 13.38,
-            status: 3,
-            shipping_address: '安徽商贸职业技术学院7栋203',
-            created_at: Date.now() - 432000000,
-            products: [
-                { name: '2斤±0.2斤/份 正宗砀山梨', quantity: 1, price: 3.99 },
-                { name: '500g±50g/份 陕西猕猴桃', quantity: 1, price: 3.39 }
-            ]
-        }
-    ];
-    renderOrderList();
 }
 
 // 加载分类数据
@@ -961,8 +877,8 @@ async function loadAnalyticsData () {
 
     } catch (error) {
         console.error('Error loading analytics data:', error);
-        // 使用模拟数据作为 fallback
-        generateMockAnalyticsData();
+        // 出错时使用空数据
+        calculateAnalyticsMetrics([], []);
     } finally {
         // 无论成功还是失败，都要重置标志位
         isLoadingAnalyticsData = false;
@@ -1284,38 +1200,7 @@ function scrollToTableTop () {
     }
 }
 
-// 生成模拟数据分析数据（用于演示）
-function generateMockAnalyticsData () {
-    console.log('Generating mock analytics data...');
 
-    // 模拟商品数据
-    const mockProducts = [
-        { id: '1', name: '商品A', price: '100.00' },
-        { id: '2', name: '商品B', price: '200.00' },
-        { id: '3', name: '商品C', price: '150.00' },
-        { id: '4', name: '商品D', price: '300.00' },
-        { id: '5', name: '商品E', price: '250.00' }
-    ];
-
-    // 模拟订单数据
-    const mockOrders = Array.from({ length: 50 }, (_, i) => ({
-        id: `order-${i + 1}`,
-        status: 3, // 已完成
-        total_price: (Math.random() * 1000 + 100).toFixed(2),
-        created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-    }));
-
-    // 重新获取DOM元素，确保在使用模拟数据时能正确获取
-    refreshAnalyticsDOM();
-
-    // 检查DOM元素是否存在，只有存在时才渲染数据
-    if (salesDataBody) {
-        // 使用模拟数据计算指标
-        calculateAnalyticsMetrics(mockProducts, mockOrders);
-    } else {
-        console.warn('salesDataBody not found, skipping mock analytics data generation');
-    }
-}
 
 // 辅助函数：获取最近7天的日期
 function getLast7Days () {
