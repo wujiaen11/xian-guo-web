@@ -17,7 +17,10 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
+        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com';
+
+// 确保API_BASE_URL不以'/api'结尾
+const API_BASE_URL_CLEAN = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
 
 // 从环境变量获取管理员账号，支持微信云托管
 const ADMIN_CREDENTIALS = {
@@ -388,7 +391,7 @@ async function loadProducts () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
 
-        const response = await fetch(`${API_BASE_URL}/products`, {
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/products`, {
             signal: controller.signal
         });
 
@@ -431,7 +434,7 @@ async function loadOrders () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
 
-        const response = await fetch(`${API_BASE_URL}/orders`, {
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/orders`, {
             signal: controller.signal
         });
 
@@ -476,7 +479,7 @@ async function loadCategories () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
 
-        const response = await fetch(`${API_BASE_URL}/categories`, {
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/categories`, {
             signal: controller.signal
         });
 
@@ -547,7 +550,7 @@ function renderProductList (filteredProducts = null) {
     productListBody.innerHTML = displayProducts.map(product => `
         <tr>
             <td>${product.id}</td>
-    <td>${product.img ? `<img src="${product.img.startsWith('http') || product.img.startsWith('data:') ? product.img : API_BASE_URL.replace('/api', '') + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;><rect width=&quot;80&quot; height=&quot;80&quot; fill=&quot;#f0f0f0&quot;/></svg>');">` : '-'}</td>
+    <td>${product.img ? `<img src="${product.img.startsWith('http') || product.img.startsWith('data:') ? product.img : API_BASE_URL_CLEAN + product.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;><rect width=&quot;80&quot; height=&quot;80&quot; fill=&quot;#f0f0f0&quot;/></svg>');">` : '-'}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
             <td>¥${parseFloat(product.price).toFixed(2)}</td>
@@ -733,7 +736,7 @@ async function updateOrderStatus (orderId, currentStatus) {
     const newStatus = currentStatus + 1;
     if (confirm(`确定要将订单状态更新为 ${getStatusText(newStatus)} 吗？`)) {
         try {
-            const url = `${API_BASE_URL}/orders/${orderId}/status`;
+            const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}/status`;
             const data = { status: newStatus };
             console.log('Updating order status:', { orderId, currentStatus, newStatus, url });
 
@@ -770,7 +773,7 @@ async function updateOrderStatus (orderId, currentStatus) {
 async function deleteOrder (orderId) {
     if (confirm('确定要删除这个订单吗？此操作不可恢复。')) {
         try {
-            const url = `${API_BASE_URL}/orders/${orderId}`;
+            const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}`;
             console.log('Deleting order:', { orderId, url });
 
             const response = await fetch(url, {
@@ -872,7 +875,7 @@ async function handleFormSubmit (e) {
 
     try {
         let response;
-        const url = isEditing ? `${API_BASE_URL}/products/${currentProductId}` : `${API_BASE_URL}/products`;
+        const url = isEditing ? `${API_BASE_URL_CLEAN}/api/products/${currentProductId}` : `${API_BASE_URL_CLEAN}/api/products`;
         const method = isEditing ? 'PUT' : 'POST';
 
         console.log('Sending form data:', { url, method });
@@ -931,7 +934,7 @@ function validateForm () {
 async function deleteProduct (productId) {
     if (confirm('确定要删除这个商品吗？')) {
         try {
-            const url = `${API_BASE_URL}/products/${productId}`;
+            const url = `${API_BASE_URL_CLEAN}/api/products/${productId}`;
             console.log('Deleting product:', { productId, url });
 
             const response = await fetch(url, {
@@ -1078,8 +1081,8 @@ async function loadAnalyticsData () {
 
             // 并行加载商品和订单数据
             const [productsResponse, ordersResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/products`, { signal: controller1.signal }),
-                fetch(`${API_BASE_URL}/orders`, { signal: controller2.signal })
+                fetch(`${API_BASE_URL_CLEAN}/api/products`, { signal: controller1.signal }),
+                fetch(`${API_BASE_URL_CLEAN}/api/orders`, { signal: controller2.signal })
             ]);
 
             clearTimeout(timeoutId);
@@ -2020,7 +2023,7 @@ async function loadHomePageProducts () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
 
-        const response = await fetch(`${API_BASE_URL}/products`, {
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/products`, {
             signal: controller.signal
         });
 
@@ -2058,7 +2061,7 @@ function renderHomePageProducts () {
     productList.innerHTML = products.map((product, index) => {
         let imgSrc = product.img;
         if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:')) {
-            imgSrc = API_BASE_URL.replace('/api', '') + imgSrc;
+            imgSrc = API_BASE_URL_CLEAN + imgSrc;
         }
         if (!imgSrc) {
             imgSrc = 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 300 300\'><rect width=\'300\' height=\'300\' fill=\'#f0f0f0\'/><text x=\'150\' y=\'160\' text-anchor=\'middle\' fill=\'#999\' font-size=\'16\'>图片加载失败</text></svg>';
@@ -2431,7 +2434,7 @@ function hideAdminPanel () {
 // 网站浏览量统计
 async function updateVisitCount () {
     try {
-        const response = await fetch(`${API_BASE_URL}/visit-count/increment`, {
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/visit-count/increment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2455,7 +2458,7 @@ async function updateVisitCount () {
 // 显示当前浏览量
 async function displayVisitCount () {
     try {
-        const response = await fetch(`${API_BASE_URL}/visit-count`);
+        const response = await fetch(`${API_BASE_URL_CLEAN}/api/visit-count`);
 
         if (response.ok) {
             const data = await response.json();
