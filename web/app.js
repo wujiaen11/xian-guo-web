@@ -590,26 +590,40 @@ function renderOrderList (filteredOrders = null) {
     }
 
     ordersEmptyState.style.display = 'none';
-    orderListBody.innerHTML = displayOrders.map(order => `
-        <tr>
-        <td>${order.id}</td>
-            <td>${order.user_id}</td>
-            <td>¥${parseFloat(order.total_price).toFixed(2)}</td>
-            <td>${getStatusText(order.status)}</td>
-            <td>${order.shipping_address}</td>
-            <td>${formatDate(order.created_at)}</td>
-            <td>
-                <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
-                    <i class="fas fa-eye"></i>
-                    <span>查看</span>
-                </button>
-                <button class="btn btn-sm ${order.status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${order.status})" ${order.status >= 3 ? 'disabled' : ''}>
-                    <i class="fas fa-sync"></i>
-                    <span>${order.status < 3 ? '更新' : '已完成'}</span>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    orderListBody.innerHTML = displayOrders.map(order => {
+        // 处理订单金额字段，支持不同的字段名
+        const price = order.total_price || order.total || order.totalPrice || 0;
+        const formattedPrice = parseFloat(price).toFixed(2);
+
+        // 处理订单状态，确保是数字类型
+        const status = typeof order.status === 'number' ? order.status :
+            order.status === '已完成' ? 3 :
+                order.status === '待支付' ? 0 :
+                    order.status === '待发货' ? 1 :
+                        order.status === '待收货' ? 2 :
+                            order.status === '已取消' ? 4 : 0;
+
+        return `
+            <tr>
+                <td>${order.id}</td>
+                <td>${order.user_id}</td>
+                <td>¥${formattedPrice}</td>
+                <td>${getStatusText(order.status)}</td>
+                <td>${order.shipping_address}</td>
+                <td>${formatDate(order.created_at)}</td>
+                <td>
+                    <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
+                        <i class="fas fa-eye"></i>
+                        <span>查看</span>
+                    </button>
+                    <button class="btn btn-sm ${status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${status})" ${status >= 3 ? 'disabled' : ''}>
+                        <i class="fas fa-sync"></i>
+                        <span>${status < 3 ? '更新' : '已完成'}</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // 获取订单状态文本
@@ -626,9 +640,102 @@ function getStatusText (status) {
 
 // 查看订单详情
 function openOrderDetail (orderId) {
-    // 这里可以实现订单详情弹窗
     console.log('Open order detail:', orderId);
-    // 后续可以添加订单详情模态框
+    // 查找订单
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+        showError('订单不存在');
+        return;
+    }
+
+    // 创建订单详情模态框
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    `;
+
+    // 处理订单金额字段，支持不同的字段名
+    const price = order.total_price || order.total || order.totalPrice || 0;
+    const formattedPrice = parseFloat(price).toFixed(2);
+
+    // 构建订单详情HTML
+    let orderDetailsHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>订单详情</h2>
+            <button onclick="this.closest('div').remove();" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>订单ID:</strong> ${order.id}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>用户ID:</strong> ${order.user_id}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>总金额:</strong> ¥${formattedPrice}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>状态:</strong> ${getStatusText(order.status)}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>收货地址:</strong> ${order.shipping_address}
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong>创建时间:</strong> ${formatDate(order.created_at)}
+        </div>
+    `;
+
+    // 如果有商品信息，添加商品列表
+    if (order.products && order.products.length > 0) {
+        orderDetailsHTML += `
+            <div style="margin-top: 20px; margin-bottom: 15px;">
+                <strong>商品信息:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+        `;
+
+        order.products.forEach(product => {
+            orderDetailsHTML += `
+                <li style="margin-bottom: 5px;">
+                    ${product.name} × ${product.quantity} - ¥${(product.price * product.quantity).toFixed(2)}
+                </li>
+            `;
+        });
+
+        orderDetailsHTML += `
+                </ul>
+            </div>
+        `;
+    }
+
+    modalContent.innerHTML = orderDetailsHTML;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // 点击模态框外部关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 
@@ -857,9 +964,23 @@ function handleOrderSearch () {
     // 应用状态筛选
     const statusFilter = orderStatusFilter.value;
     if (statusFilter) {
-        filteredOrders = filteredOrders.filter(order =>
-            order.status === parseInt(statusFilter)
-        );
+        const statusInt = parseInt(statusFilter);
+        filteredOrders = filteredOrders.filter(order => {
+            // 处理不同格式的状态值
+            if (typeof order.status === 'number') {
+                return order.status === statusInt;
+            } else if (typeof order.status === 'string') {
+                // 尝试将字符串状态转换为数字
+                const statusStr = order.status;
+                if (statusStr === '已完成') return statusInt === 3;
+                if (statusStr === '待支付') return statusInt === 0;
+                if (statusStr === '待发货') return statusInt === 1;
+                if (statusStr === '待收货') return statusInt === 2;
+                if (statusStr === '已取消') return statusInt === 4;
+                return false;
+            }
+            return false;
+        });
     }
 
     renderOrderList(filteredOrders);
@@ -980,8 +1101,23 @@ function calculateAnalyticsMetrics (products, orders) {
     // 1. 计算概览指标
     const totalProductsCount = products.length;
     const totalOrdersCount = orders.length;
-    const completedOrders = orders.filter(order => order.status === 3);
-    const totalSalesAmount = completedOrders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
+
+    // 过滤已完成的订单，处理不同格式的状态值
+    const completedOrders = orders.filter(order => {
+        if (typeof order.status === 'number') {
+            return order.status === 3;
+        } else if (typeof order.status === 'string') {
+            return order.status === '已完成';
+        }
+        return false;
+    });
+
+    // 计算总销售额，处理不同字段名的情况
+    const totalSalesAmount = completedOrders.reduce((sum, order) => {
+        const price = order.total_price || order.total || order.totalPrice || 0;
+        return sum + parseFloat(price) || 0;
+    }, 0);
+
     const avgOrderValue = totalSalesAmount / (completedOrders.length || 1);
 
     // 更新概览卡片
@@ -1005,9 +1141,26 @@ function calculateAnalyticsMetrics (products, orders) {
 
     // 3. 生成商品销售数据
     const productSalesData = products.map(product => {
-        // 这里简化处理，实际应该从订单项中统计销量
-        const salesCount = 0;
-        const salesAmount = 0;
+        // 从订单中统计销量和销售额
+        let salesCount = 0;
+        let salesAmount = 0;
+
+        // 遍历所有已完成的订单
+        completedOrders.forEach(order => {
+            if (order.products && order.products.length > 0) {
+                // 查找当前商品在订单中的记录
+                const productInOrder = order.products.find(p =>
+                    p.id === product.id ||
+                    p.productId === product.id ||
+                    p.name === product.name
+                );
+                if (productInOrder) {
+                    salesCount += productInOrder.quantity || 1;
+                    salesAmount += (productInOrder.price * (productInOrder.quantity || 1)) || 0;
+                }
+            }
+        });
+
         return {
             id: product.id,
             name: product.name,
