@@ -608,7 +608,7 @@ function renderOrderList (filteredOrders = null) {
                 <td>${order.id}</td>
                 <td>${order.user_id}</td>
                 <td>¥${formattedPrice}</td>
-                <td>${getStatusText(order.status)}</td>
+                <td>${getStatusText(status)}</td>
                 <td>${order.shipping_address}</td>
                 <td>${formatDate(order.created_at)}</td>
                 <td>
@@ -678,31 +678,39 @@ function openOrderDetail (orderId) {
     const price = order.total_price || order.total || order.totalPrice || 0;
     const formattedPrice = parseFloat(price).toFixed(2);
 
+    // 处理订单状态，确保是数字类型
+    const status = typeof order.status === 'number' ? order.status :
+        order.status === '已完成' ? 3 :
+            order.status === '待支付' ? 0 :
+                order.status === '待发货' ? 1 :
+                    order.status === '待收货' ? 2 :
+                        order.status === '已取消' ? 4 : 0;
+
     // 构建订单详情HTML
     let orderDetailsHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2>订单详情</h2>
-            <button onclick="this.closest('div').remove();" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>订单ID:</strong> ${order.id}
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>用户ID:</strong> ${order.user_id}
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>总金额:</strong> ¥${formattedPrice}
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>状态:</strong> ${getStatusText(order.status)}
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>收货地址:</strong> ${order.shipping_address}
-        </div>
-        <div style="margin-bottom: 15px;">
-            <strong>创建时间:</strong> ${formatDate(order.created_at)}
-        </div>
-    `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>订单详情</h2>
+                <button onclick="this.closest('div').remove();" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>订单ID:</strong> ${order.id}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>用户ID:</strong> ${order.user_id}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>总金额:</strong> ¥${formattedPrice}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>状态:</strong> ${getStatusText(status)}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>收货地址:</strong> ${order.shipping_address}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <strong>创建时间:</strong> ${formatDate(order.created_at)}
+            </div>
+        `;
 
     // 如果有商品信息，添加商品列表
     if (order.products && order.products.length > 0) {
