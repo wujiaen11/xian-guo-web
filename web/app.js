@@ -593,12 +593,31 @@ function renderOrderList (filteredOrders = null) {
     }
 
     ordersEmptyState.style.display = 'none';
-    orderListBody.innerHTML = displayOrders.map(order => `
+    orderListBody.innerHTML = displayOrders.map(order => {
+        // 确保 status 是数字类型
+        let orderStatus = order.status;
+        if (typeof orderStatus === 'string') {
+            // 如果是字符串，尝试转换为数字
+            if (order.statusCode !== undefined) {
+                orderStatus = order.statusCode;
+            } else {
+                // 根据状态文本映射回数字
+                const statusMap = {
+                    '待发货': 0,
+                    '待收货': 1,
+                    '配送中': 2,
+                    '已完成': 3,
+                    '已取消': 4
+                };
+                orderStatus = statusMap[orderStatus] !== undefined ? statusMap[orderStatus] : 0;
+            }
+        }
+        return `
         <tr>
         <td>${order.id}</td>
             <td>${order.user_id}</td>
             <td>¥${parseFloat(order.total_price).toFixed(2)}</td>
-            <td>${getStatusText(order.status)}</td>
+            <td>${typeof order.status === 'string' ? order.status : getStatusText(orderStatus)}</td>
             <td>${order.shipping_address}</td>
             <td>${formatDate(order.created_at)}</td>
             <td>
@@ -606,17 +625,13 @@ function renderOrderList (filteredOrders = null) {
                     <i class="fas fa-eye"></i>
                     <span>查看</span>
                 </button>
-                <button class="btn btn-sm ${order.status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${order.status})" ${order.status >= 3 ? 'disabled' : ''}>
-                    <i class="fas fa-sync"></i>
-                    <span>${order.status < 3 ? '更新' : '已完成'}</span>
-                </button>
                 <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')">
                     <i class="fas fa-trash"></i>
                     <span>删除</span>
                 </button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 // 获取订单状态文本 - 与服务端统一状态映射保持一致
@@ -783,12 +798,34 @@ async function deleteOrder (orderId) {
             console.log('Delete order response:', { status: response.status, ok: response.ok });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Delete order error:', errorData);
-                throw new Error(errorData.error || '删除订单失败');
+                let errorMessage = '删除订单失败';
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } else {
+                        const text = await response.text();
+                        console.error('Server returned non-JSON response:', text);
+                        errorMessage = `删除订单失败 (HTTP ${response.status})`;
+                    }
+                } catch (parseErr) {
+                    console.error('Error parsing error response:', parseErr);
+                    errorMessage = `删除订单失败 (HTTP ${response.status})`;
+                }
+                throw new Error(errorMessage);
             }
 
-            const result = await response.json();
+            let result;
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                }
+            } catch (parseErr) {
+                console.log('Response is not JSON, continuing anyway');
+            }
+
             console.log('Delete order success:', result);
 
             // 重新加载订单数据
@@ -999,6 +1036,9 @@ function handleOrderSearch () {
                 if (statusStr === '已完成') return statusInt === 3;
                 if (statusStr === '已取消') return statusInt === 4;
                 return false;
+            } else if (order.statusCode !== undefined) {
+                // 使用 statusCode 字段
+                return order.statusCode === statusInt;
             }
             return false;
         });
