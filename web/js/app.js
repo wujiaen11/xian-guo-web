@@ -574,9 +574,9 @@ function renderOrderList (filteredOrders = null) {
                     <i class="fas fa-eye"></i>
                     <span>查看</span>
                 </button>
-                <button class="btn btn-sm ${order.status < 3 ? 'btn-primary' : 'btn-secondary'}" onclick="updateOrderStatus('${order.id}', ${order.status})" ${order.status >= 3 ? 'disabled' : ''}>
-                    <i class="fas fa-sync"></i>
-                    <span>${order.status < 3 ? '更新' : '已完成'}</span>
+                <button class="btn btn-sm btn-delete" onclick="deleteOrder('${order.id}')">
+                    <i class="fas fa-trash"></i>
+                    <span>删除</span>
                 </button>
             </td>
         </tr>
@@ -778,6 +778,46 @@ async function deleteProduct (productId) {
         } catch (error) {
             console.error('Error deleting product:', error);
             showError('删除失败: ' + error.message);
+        }
+    }
+}
+
+// 删除订单
+async function deleteOrder (orderId) {
+    if (confirm('确定要删除这个订单吗？此操作不可恢复。')) {
+        try {
+            const url = `${API_BASE_URL}/orders/${orderId}`;
+            console.log('Deleting order:', { orderId, url });
+
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+
+            console.log('Delete order response:', { status: response.status, ok: response.ok });
+
+            if (!response.ok) {
+                // 尝试解析错误响应，如果不是JSON则直接抛出错误
+                let errorMessage = '删除订单失败';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                    errorMessage = `删除订单失败 (${response.status})`;
+                }
+                console.error('Delete order error:', errorMessage);
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            console.log('Delete order success:', result);
+
+            // 重新加载订单数据
+            await loadOrders();
+            showError('订单删除成功', 'success');
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            showError('删除订单失败: ' + error.message);
         }
     }
 }
