@@ -12,7 +12,10 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com';
+        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com/api';
+
+// 确保API_BASE_URL不以'/api'结尾（用于图片路径等）
+const API_BASE_URL_CLEAN = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
 
 // DOM元素
 let modalOverlay;
