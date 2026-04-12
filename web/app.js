@@ -612,11 +612,17 @@ function renderOrderList (filteredOrders = null) {
                     '待发货': 0,
                     '待收货': 1,
                     '配送中': 2,
-                    '已完成': 3,
-                    '已取消': 4
+                    '已完成': 3
                 };
                 orderStatus = statusMap[orderStatus] !== undefined ? statusMap[orderStatus] : 0;
             }
+        }
+        // 计算商品总数
+        let productCount = 0;
+        let firstProduct = null;
+        if (order.products && order.products.length > 0) {
+            productCount = order.products.reduce((sum, p) => sum + (p.quantity || p.num || 0), 0);
+            firstProduct = order.products[0];
         }
         const isChecked = selectedOrderIds.has(order.id);
         return `
@@ -624,13 +630,22 @@ function renderOrderList (filteredOrders = null) {
             <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">
                 <input type="checkbox" class="order-checkbox" data-order-id="${order.id}" ${isChecked ? 'checked' : ''} onchange="toggleOrderSelection('${order.id}')" style="cursor: pointer;">
             </td>
-            <td>${order.id}</td>
-            <td>${order.user_id}</td>
-            <td>¥${parseFloat(order.total_price).toFixed(2)}</td>
-            <td>${typeof order.status === 'string' ? order.status : getStatusText(orderStatus)}</td>
-            <td>${order.shipping_address}</td>
-            <td>${formatDate(order.created_at)}</td>
-            <td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    ${firstProduct && firstProduct.img ? `<img src="${firstProduct.img.startsWith('http') || firstProduct.img.startsWith('data:') ? firstProduct.img : API_BASE_URL_CLEAN + firstProduct.img}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;50&quot; height=&quot;50&quot; viewBox=&quot;0 0 50 50&quot;><rect width=&quot;50&quot; height=&quot;50&quot; fill=&quot;#f0f0f0&quot;/></svg>');">` : ''}
+                    <div>
+                        <div style="font-weight: 500; color: #333;">${firstProduct ? firstProduct.name : '暂无商品'}</div>
+                        <div style="font-size: 12px; color: #999;">${order.id}</div>
+                    </div>
+                </div>
+            </td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${order.contact_name || order.user_id}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${productCount} 件</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">¥${parseFloat(order.total_price).toFixed(2)}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${typeof order.status === 'string' ? order.status : getStatusText(orderStatus)}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${order.shipping_address}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${formatDate(order.created_at)}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">
                 <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
                     <i class="fas fa-eye"></i>
                     <span>查看</span>
@@ -650,8 +665,7 @@ function getStatusText (status) {
         0: '待发货',
         1: '待收货',
         2: '配送中',
-        3: '已完成',
-        4: '已取消'
+        3: '已完成'
     };
     return statusMap[status] || '未知状态';
 }
@@ -702,7 +716,7 @@ function openOrderDetail (orderId) {
             <strong>订单ID:</strong> ${order.id}
         </div>
         <div style="margin-bottom: 15px;">
-            <strong>用户ID:</strong> ${order.user_id}
+            <strong>联系人:</strong> ${order.contact_name || order.user_id}
         </div>
         <div style="margin-bottom: 15px;">
             <strong>总金额:</strong> ¥${parseFloat(order.total_price).toFixed(2)}
@@ -1107,9 +1121,14 @@ function handleOrderSearch () {
     let filteredOrders = orders;
 
     if (searchTerm) {
-        filteredOrders = filteredOrders.filter(order =>
-            order.id.toLowerCase().includes(searchTerm)
-        );
+        filteredOrders = filteredOrders.filter(order => {
+            // 搜索订单ID或商品名称
+            const matchOrderId = order.id.toLowerCase().includes(searchTerm);
+            const matchProductName = order.products && order.products.some(p =>
+                p.name && p.name.toLowerCase().includes(searchTerm)
+            );
+            return matchOrderId || matchProductName;
+        });
     }
 
     // 应用状态筛选
@@ -1127,7 +1146,6 @@ function handleOrderSearch () {
                 if (statusStr === '待收货') return statusInt === 1;
                 if (statusStr === '配送中') return statusInt === 2;
                 if (statusStr === '已完成') return statusInt === 3;
-                if (statusStr === '已取消') return statusInt === 4;
                 return false;
             } else if (order.statusCode !== undefined) {
                 // 使用 statusCode 字段
@@ -2360,14 +2378,13 @@ function showAdminPanel () {
                 <div id="orders-page" class="page-content" style="display: none; width: 100%;">
                     <!-- 搜索和过滤 -->
                     <div class="search-filter" style="margin-bottom: 20px; display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-                        <input type="text" id="order-search-input" placeholder="搜索订单ID" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1; min-width: 200px;">
+                        <input type="text" id="order-search-input" placeholder="搜索订单" class="search-input" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; flex: 1; min-width: 200px;">
                         <select id="order-status-filter" class="status-filter" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; min-width: 150px;">
                             <option value="">全部状态</option>
-                            <option value="0">待支付</option>
-                            <option value="1">待发货</option>
-                            <option value="2">待收货</option>
+                            <option value="0">待发货</option>
+                            <option value="1">待收货</option>
+                            <option value="2">配送中</option>
                             <option value="3">已完成</option>
-                            <option value="4">已取消</option>
                         </select>
                         <button id="batch-delete-btn" class="btn btn-danger" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;" onclick="batchDeleteOrders()">
                             <i class="fas fa-trash"></i>
@@ -2385,8 +2402,9 @@ function showAdminPanel () {
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333; width: 50px;">
                                             <input type="checkbox" id="select-all-orders" onchange="toggleSelectAllOrders()" style="cursor: pointer;">
                                         </th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">订单ID</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">用户ID</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">订单</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">联系人</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">商品数量</th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">总金额</th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">状态</th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">收货地址</th>
