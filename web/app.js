@@ -2421,9 +2421,9 @@ function showAdminPanel () {
                         <select id="order-status-filter" class="status-filter" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; min-width: 150px;">
                             <option value="">全部状态</option>
                             <option value="0">待发货</option>
-                            <option value="1">待收货</option>
-                            <option value="2">进行中</option>
-                            <option value="3">已完成</option>
+                            <option value="1">进行中</option>
+                            <option value="2">已收货</option>
+                            <option value="3">已评价</option>
                         </select>
                         <button id="batch-delete-btn" class="btn btn-danger" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;" onclick="batchDeleteOrders()">
                             <i class="fas fa-trash"></i>

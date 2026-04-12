@@ -573,10 +573,12 @@ function renderOrderList (filteredOrders = null) {
             <td>${order.shipping_address}</td>
             <td>${formatDate(order.created_at)}</td>
             <td>
-                <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
-                    <i class="fas fa-eye"></i>
-                    <span>查看</span>
+                ${order.status === 0 ? `
+                <button class="btn btn-sm btn-edit" onclick="shipOrder('${order.id}')">
+                    <i class="fas fa-shipping-fast"></i>
+                    <span>发货</span>
                 </button>
+                ` : ''}
                 <button class="btn btn-sm btn-delete" onclick="deleteOrder('${order.id}')">
                     <i class="fas fa-trash"></i>
                     <span>删除</span>
@@ -589,13 +591,49 @@ function renderOrderList (filteredOrders = null) {
 // 获取订单状态文本
 function getStatusText (status) {
     const statusMap = {
-        0: '待支付',
-        1: '待发货',
-        2: '待收货',
-        3: '已完成',
-        4: '已取消'
+        0: '待发货',
+        1: '进行中',
+        2: '已收货',
+        3: '已评价'
     };
     return statusMap[status] || '未知状态';
+}
+
+// 商家发货功能
+async function shipOrder (orderId) {
+    if (confirm('确定要发货吗？')) {
+        try {
+            const url = `${API_BASE_URL}/orders/${orderId}/status`;
+            const data = { status: 1 }; // 状态1表示进行中
+            console.log('发货，更新订单状态为进行中:', { orderId, url });
+
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            console.log('发货响应:', { status: response.status, ok: response.ok });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('发货失败:', errorData);
+                throw new Error(errorData.error || '发货失败');
+            }
+
+            const result = await response.json();
+            console.log('发货成功:', result);
+
+            // 重新加载订单数据
+            await loadOrders();
+            showError('发货成功，订单已进入进行中状态', 'success');
+        } catch (error) {
+            console.error('Error shipping order:', error);
+            showError('发货失败: ' + error.message);
+        }
+    }
 }
 
 // 查看订单详情
