@@ -611,7 +611,7 @@ function renderOrderList (filteredOrders = null) {
                 const statusMap = {
                     '待发货': 0,
                     '待收货': 1,
-                    '配送中': 2,
+                    '进行中': 2,
                     '已完成': 3
                 };
                 orderStatus = statusMap[orderStatus] !== undefined ? statusMap[orderStatus] : 0;
@@ -677,7 +677,7 @@ async function shipOrder (orderId) {
     if (confirm('确定要发货吗？')) {
         try {
             const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}/status`;
-            const data = { status: 2 }; // 状态2表示进行中（配送中）
+            const data = { status: 2 }; // 状态2表示进行中
             console.log('发货，更新订单状态为进行中:', { orderId, url });
 
             const response = await fetch(url, {
@@ -1183,7 +1183,7 @@ function handleOrderSearch () {
                 const statusStr = order.status;
                 if (statusStr === '待发货') return statusInt === 0;
                 if (statusStr === '待收货') return statusInt === 1;
-                if (statusStr === '配送中') return statusInt === 2;
+                if (statusStr === '进行中') return statusInt === 2;
                 if (statusStr === '已完成') return statusInt === 3;
                 return false;
             } else if (order.statusCode !== undefined) {
@@ -2422,7 +2422,7 @@ function showAdminPanel () {
                             <option value="">全部状态</option>
                             <option value="0">待发货</option>
                             <option value="1">待收货</option>
-                            <option value="2">配送中</option>
+                            <option value="2">进行中</option>
                             <option value="3">已完成</option>
                         </select>
                         <button id="batch-delete-btn" class="btn btn-danger" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;" onclick="batchDeleteOrders()">
