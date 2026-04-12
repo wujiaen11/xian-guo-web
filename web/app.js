@@ -610,9 +610,9 @@ function renderOrderList (filteredOrders = null) {
                 // 根据状态文本映射回数字
                 const statusMap = {
                     '待发货': 0,
-                    '待收货': 1,
-                    '进行中': 2,
-                    '已完成': 3
+                    '进行中': 1,
+                    '已收货': 2,
+                    '已评价': 3
                 };
                 orderStatus = statusMap[orderStatus] !== undefined ? statusMap[orderStatus] : 0;
             }
@@ -665,9 +665,9 @@ function renderOrderList (filteredOrders = null) {
 function getStatusText (status) {
     const statusMap = {
         0: '待发货',
-        1: '待收货',
-        2: '进行中',
-        3: '已完成'
+        1: '进行中',
+        2: '已收货',
+        3: '已评价'
     };
     return statusMap[status] || '未知状态';
 }
@@ -677,7 +677,7 @@ async function shipOrder (orderId) {
     if (confirm('确定要发货吗？')) {
         try {
             const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}/status`;
-            const data = { status: 2 }; // 状态2表示进行中
+            const data = { status: 1 }; // 状态1表示进行中
             console.log('发货，更新订单状态为进行中:', { orderId, url });
 
             const response = await fetch(url, {
@@ -1182,9 +1182,9 @@ function handleOrderSearch () {
                 // 尝试将字符串状态转换为数字 - 与统一状态映射保持一致
                 const statusStr = order.status;
                 if (statusStr === '待发货') return statusInt === 0;
-                if (statusStr === '待收货') return statusInt === 1;
-                if (statusStr === '进行中') return statusInt === 2;
-                if (statusStr === '已完成') return statusInt === 3;
+                if (statusStr === '进行中') return statusInt === 1;
+                if (statusStr === '已收货') return statusInt === 2;
+                if (statusStr === '已评价') return statusInt === 3;
                 return false;
             } else if (order.statusCode !== undefined) {
                 // 使用 statusCode 字段
