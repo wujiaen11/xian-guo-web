@@ -4,6 +4,7 @@
 let products = [];
 let orders = [];
 let categories = [];
+let selectedOrderIds = new Set();
 let currentProductId = null;
 let isEditing = false;
 let isLoadingAnalyticsData = false;
@@ -389,7 +390,7 @@ async function loadProducts () {
     }
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL_CLEAN}/api/products`, {
             signal: controller.signal
@@ -426,13 +427,15 @@ async function loadProducts () {
 // 加载订单数据
 async function loadOrders () {
     console.log('Loading orders from API...');
+    // 清空之前的选择
+    selectedOrderIds.clear();
     // 显示加载状态
     if (ordersLoading) {
         ordersLoading.style.display = 'flex';
     }
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL_CLEAN}/api/orders`, {
             signal: controller.signal
@@ -452,6 +455,7 @@ async function loadOrders () {
         } else {
             renderOrderList();
         }
+        updateBatchDeleteButton();
         return true;
     } catch (error) {
         console.error('Error loading orders:', error);
@@ -469,7 +473,9 @@ async function loadOrders () {
 function loadEmptyOrders () {
     console.log('Loading empty orders...');
     orders = [];
+    selectedOrderIds.clear();
     renderOrderList();
+    updateBatchDeleteButton();
 }
 
 // 加载分类数据
@@ -477,7 +483,7 @@ async function loadCategories () {
     console.log('Loading categories from API...');
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL_CLEAN}/api/categories`, {
             signal: controller.signal
@@ -612,9 +618,13 @@ function renderOrderList (filteredOrders = null) {
                 orderStatus = statusMap[orderStatus] !== undefined ? statusMap[orderStatus] : 0;
             }
         }
+        const isChecked = selectedOrderIds.has(order.id);
         return `
         <tr>
-        <td>${order.id}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">
+                <input type="checkbox" class="order-checkbox" data-order-id="${order.id}" ${isChecked ? 'checked' : ''} onchange="toggleOrderSelection('${order.id}')" style="cursor: pointer;">
+            </td>
+            <td>${order.id}</td>
             <td>${order.user_id}</td>
             <td>¥${parseFloat(order.total_price).toFixed(2)}</td>
             <td>${typeof order.status === 'string' ? order.status : getStatusText(orderStatus)}</td>
@@ -835,6 +845,89 @@ async function deleteOrder (orderId) {
             console.error('Error deleting order:', error);
             showError('删除订单失败: ' + error.message);
         }
+    }
+}
+
+// 切换单个订单选择状态
+function toggleOrderSelection (orderId) {
+    if (selectedOrderIds.has(orderId)) {
+        selectedOrderIds.delete(orderId);
+    } else {
+        selectedOrderIds.add(orderId);
+    }
+    updateSelectAllCheckbox();
+    updateBatchDeleteButton();
+}
+
+// 全选/取消全选订单
+function toggleSelectAllOrders () {
+    const selectAllCheckbox = document.getElementById('select-all-orders');
+    const isChecked = selectAllCheckbox.checked;
+
+    const displayOrders = orders;
+    if (isChecked) {
+        displayOrders.forEach(order => selectedOrderIds.add(order.id));
+    } else {
+        selectedOrderIds.clear();
+    }
+
+    renderOrderList();
+    updateBatchDeleteButton();
+}
+
+// 更新全选复选框状态
+function updateSelectAllCheckbox () {
+    const selectAllCheckbox = document.getElementById('select-all-orders');
+    if (!selectAllCheckbox) return;
+
+    const displayOrders = orders;
+    const allSelected = displayOrders.length > 0 && displayOrders.every(order => selectedOrderIds.has(order.id));
+    selectAllCheckbox.checked = allSelected;
+}
+
+// 更新批量删除按钮显示状态
+function updateBatchDeleteButton () {
+    const batchDeleteBtn = document.getElementById('batch-delete-btn');
+    if (!batchDeleteBtn) return;
+
+    batchDeleteBtn.style.display = selectedOrderIds.size > 0 ? 'block' : 'none';
+}
+
+// 批量删除订单
+async function batchDeleteOrders () {
+    if (selectedOrderIds.size === 0) {
+        showError('请先选择要删除的订单');
+        return;
+    }
+
+    if (!confirm(`确定要删除选中的 ${selectedOrderIds.size} 个订单吗？此操作不可恢复。`)) {
+        return;
+    }
+
+    try {
+        const deletePromises = Array.from(selectedOrderIds).map(async orderId => {
+            const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}`;
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error(`删除订单 ${orderId} 失败`);
+            }
+            return orderId;
+        });
+
+        await Promise.all(deletePromises);
+
+        // 清空选择
+        selectedOrderIds.clear();
+
+        // 重新加载订单数据
+        await loadOrders();
+        updateBatchDeleteButton();
+        showError(`成功删除 ${deletePromises.length} 个订单`, 'success');
+    } catch (error) {
+        console.error('批量删除订单失败:', error);
+        showError('批量删除订单失败: ' + error.message);
     }
 }
 
@@ -2061,7 +2154,7 @@ async function loadHomePageProducts () {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL_CLEAN}/api/products`, {
             signal: controller.signal
@@ -2276,6 +2369,10 @@ function showAdminPanel () {
                             <option value="3">已完成</option>
                             <option value="4">已取消</option>
                         </select>
+                        <button id="batch-delete-btn" class="btn btn-danger" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;" onclick="batchDeleteOrders()">
+                            <i class="fas fa-trash"></i>
+                            批量删除
+                        </button>
                     </div>
 
                     <!-- 订单列表 -->
@@ -2285,6 +2382,9 @@ function showAdminPanel () {
                             <table class="order-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 <thead style="background-color: #f8f9fa;">
                                     <tr>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333; width: 50px;">
+                                            <input type="checkbox" id="select-all-orders" onchange="toggleSelectAllOrders()" style="cursor: pointer;">
+                                        </th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">订单ID</th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">用户ID</th>
                                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; color: #333;">总金额</th>

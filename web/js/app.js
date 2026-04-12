@@ -12,7 +12,7 @@ const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.e
     ? process.env.API_BASE_URL
     : (window.ENV && window.ENV.API_BASE_URL)
         ? window.ENV.API_BASE_URL
-        : 'https://xianguo.site/api';
+        : 'https://xianguo-217100-7-1320842230.sh.run.tcloudbase.com';
 
 // DOM元素
 let modalOverlay;
@@ -292,7 +292,7 @@ async function loadProducts () {
     console.log('Loading products from API...');
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL}/products`, {
             signal: controller.signal
@@ -324,7 +324,7 @@ async function loadOrders () {
     console.log('Loading orders from API...');
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL}/orders`, {
             signal: controller.signal
@@ -437,7 +437,7 @@ async function loadCategories () {
     console.log('Loading categories from API...');
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
         const response = await fetch(`${API_BASE_URL}/categories`, {
             signal: controller.signal
