@@ -646,10 +646,12 @@ function renderOrderList (filteredOrders = null) {
             <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${order.shipping_address}</td>
             <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">${formatDate(order.created_at)}</td>
             <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0;">
-                <button class="btn btn-sm btn-edit" onclick="openOrderDetail('${order.id}')">
-                    <i class="fas fa-eye"></i>
-                    <span>查看</span>
+                ${orderStatus === 0 ? `
+                <button class="btn btn-sm btn-edit" onclick="shipOrder('${order.id}')">
+                    <i class="fas fa-shipping-fast"></i>
+                    <span>发货</span>
                 </button>
+                ` : ''}
                 <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')">
                     <i class="fas fa-trash"></i>
                     <span>删除</span>
@@ -664,10 +666,47 @@ function getStatusText (status) {
     const statusMap = {
         0: '待发货',
         1: '待收货',
-        2: '配送中',
+        2: '进行中',
         3: '已完成'
     };
     return statusMap[status] || '未知状态';
+}
+
+// 商家发货功能
+async function shipOrder (orderId) {
+    if (confirm('确定要发货吗？')) {
+        try {
+            const url = `${API_BASE_URL_CLEAN}/api/orders/${orderId}/status`;
+            const data = { status: 2 }; // 状态2表示进行中（配送中）
+            console.log('发货，更新订单状态为进行中:', { orderId, url });
+
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            console.log('发货响应:', { status: response.status, ok: response.ok });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('发货失败:', errorData);
+                throw new Error(errorData.error || '发货失败');
+            }
+
+            const result = await response.json();
+            console.log('发货成功:', result);
+
+            // 重新加载订单数据
+            await loadOrders();
+            showError('发货成功，订单已进入进行中状态', 'success');
+        } catch (error) {
+            console.error('Error shipping order:', error);
+            showError('发货失败: ' + error.message);
+        }
+    }
 }
 
 // 查看订单详情
